@@ -593,6 +593,16 @@ export default function AdminMenuPage() {
     }
   };
 
+  const toggleAvailability = async (prod: Product) => {
+    try {
+      await updateProduct(prod.id, { is_available: !prod.is_available });
+      toast.success(prod.is_available ? tm.offline : tm.online);
+      reload();
+    } catch {
+      toast.error(tm.saveFailed);
+    }
+  };
+
   return (
     <div className="p-5 md:p-7 flex flex-col gap-5 page-enter">
       <h1 className="text-2xl text-foreground" style={{ fontFamily: "'Noto Serif SC','STSong',serif" }}>{tm.title}</h1>
@@ -646,7 +656,13 @@ export default function AdminMenuPage() {
                         {cat && <span className="text-sm text-muted-foreground">{cat.name}</span>}
                       </div>
                     </div>
-                    <div className="flex gap-2 shrink-0">
+                    <div className="flex gap-1 shrink-0">
+                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => toggleAvailability(prod)}
+                        title={prod.is_available ? tm.offline : tm.online}>
+                        {prod.is_available
+                          ? <ToggleRight className="w-5 h-5 text-primary" />
+                          : <ToggleLeft className="w-5 h-5 text-muted-foreground/40" />}
+                      </Button>
                       <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground" onClick={() => openEditProd(prod)}>
                         <Pencil className="w-4 h-4" />
                       </Button>

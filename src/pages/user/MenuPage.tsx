@@ -114,8 +114,8 @@ export default function MenuPage() {
   }, [navigate]);
 
   const filtered = activeCategory === 'all'
-    ? products.filter(p => p.is_available)
-    : products.filter(p => p.category_id === activeCategory && p.is_available);
+    ? products
+    : products.filter(p => p.category_id === activeCategory);
 
   const getCartQty = (productId: string) =>
     items.find(i => i.product.id === productId)?.quantity ?? 0;
@@ -289,14 +289,23 @@ export default function MenuPage() {
           <div className="touch-grid">
             {filtered.map(product => {
               const qty = getCartQty(product.id);
+              const available = product.is_available;
               return (
                 <div key={product.id}
-                  className="glass-card rounded-2xl overflow-hidden flex flex-col cursor-pointer group"
-                  onClick={() => openDetail(product)}>
-                  <div className="aspect-[4/3] overflow-hidden image-frame">
+                  className={`glass-card rounded-2xl overflow-hidden flex flex-col relative ${available ? 'cursor-pointer group' : 'opacity-50 pointer-events-none'}`}
+                  onClick={() => available && openDetail(product)}>
+                  <div className="aspect-[4/3] overflow-hidden image-frame relative">
                     {product.image_url
                       ? <img src={product.image_url} alt={getLocalizedName(product, lang)} className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" />
                       : <div className="w-full h-full flex items-center justify-center bg-muted"><UtensilsCrossed className="w-10 h-10 text-muted-foreground opacity-25" /></div>}
+                    {!available && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+                        <span className="text-white text-lg font-bold px-5 py-2 rounded-xl bg-black/60 backdrop-blur-sm tracking-wider"
+                          style={{ fontFamily: "'Noto Serif SC','STSong',serif" }}>
+                          {t.menu.soldOut}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="p-4 flex flex-col gap-1.5 flex-1 relative z-10">
                     <p className="text-base font-medium text-foreground text-balance line-clamp-2 leading-snug"

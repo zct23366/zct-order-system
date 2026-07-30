@@ -47,6 +47,7 @@ const ZH = {
     addToCart: '加入',
     checkout: '去结算',
     clearCart: '清空',
+    soldOut: '售罄',
     detail: {
       section: '商品详情',
       qty: '数量',
@@ -181,6 +182,7 @@ const ZH = {
     addCategory: '新增分类',
     loading: '加载中…',
     offline: '已下架',
+    online: '已上架',
     detailBlocks: '块详情',
     editProduct: '编辑商品',
     newProduct: '新增商品',
@@ -356,6 +358,7 @@ const JA: Translations = {
     addToCart: '追加',
     checkout: '注文へ進む',
     clearCart: '削除',
+    soldOut: '売り切れ',
     detail: {
       section: '商品詳細',
       qty: '数量',
@@ -483,6 +486,7 @@ const JA: Translations = {
     addCategory: 'カテゴリを追加',
     loading: '読み込み中…',
     offline: '非公開',
+    online: '公開中',
     detailBlocks: 'ブロック',
     editProduct: '商品を編集',
     newProduct: '商品を追加',
@@ -653,6 +657,7 @@ const EN: Translations = {
     addToCart: 'Add',
     checkout: 'Checkout',
     clearCart: 'Clear',
+    soldOut: 'Sold Out',
     detail: {
       section: 'Item Details',
       qty: 'Quantity',
@@ -780,6 +785,7 @@ const EN: Translations = {
     addCategory: 'Add Category',
     loading: 'Loading…',
     offline: 'Offline',
+    online: 'Online',
     detailBlocks: 'blocks',
     editProduct: 'Edit Product',
     newProduct: 'Add Product',
@@ -950,6 +956,7 @@ const KO: Translations = {
     addToCart: '담기',
     checkout: '주문하기',
     clearCart: '삭제',
+    soldOut: '품절',
     detail: {
       section: '상품 상세',
       qty: '수량',
@@ -1077,6 +1084,7 @@ const KO: Translations = {
     addCategory: '카테고리 추가',
     loading: '불러오는 중…',
     offline: '비공개',
+    online: '공개',
     detailBlocks: '블록',
     editProduct: '상품 편집',
     newProduct: '상품 추가',
