@@ -11,7 +11,7 @@ message: |
   Refactor to:
   ```typescript
   const { data, error } = await supabase.auth.signInWithSSO({
-    domain: 'miaoda-gg.com',
+    domain: 'zct-gg.com',
     options: { redirectTo: window.location.origin },
   });
   if (data?.url) window.open(data.url, '_self');

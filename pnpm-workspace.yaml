@@ -7,5 +7,3 @@ catalog:
 lockfileIncludeTarballUrl: false
 minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
-  - miaoda-sc-plugin
-  - miaoda-react-devkit
