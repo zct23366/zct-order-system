@@ -1,6 +1,6 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingCart, Plus, Minus, Trash2, UtensilsCrossed, Phone, Sparkles, X, Zap, Languages } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Trash2, UtensilsCrossed, Phone, Sparkles, X, Zap, Languages, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -12,12 +12,17 @@ import type { Product, ProductOption, CartItemOption } from '@/types/types';
 import { getLocalizedName, getLocalizedDesc, getLocalizedOptionName, getLocalizedSectionContent, productInCategory, getProductCategoryIds } from '@/types/types';
 import { fetchProductOptions } from '@/services/api';
 
+/** 商品排序方式：默认＝后台配置的编号顺序，其余按价格。 */
+type SortKey = 'default' | 'priceAsc' | 'priceDesc';
+const SORT_KEYS: SortKey[] = ['default', 'priceAsc', 'priceDesc'];
+
 export default function MenuPage() {
   const navigate = useNavigate();
   const { t, lang, setLang } = useLanguage();
   const { categories, products, loading } = useMenu();
   const { items, addItem, removeItem, updateQuantity, clearCart, totalAmount, totalCount } = useCart();
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [sortKey, setSortKey] = useState<SortKey>('default');
   const [cartOpen, setCartOpen] = useState(false);
 
   // ── 商品详情弹窗状态 ──
@@ -114,11 +119,22 @@ export default function MenuPage() {
   }, [navigate]);
 
   // 顾客端只显示可见分类；「全部」栏也只列属于可见分类的商品（隐藏分类＝停售归档）
-  const visibleCategories = categories.filter(c => c.is_visible !== false);
-  const visibleCategoryIds = new Set(visibleCategories.map(c => c.id));
-  const filtered = activeCategory === 'all'
-    ? products.filter(p => getProductCategoryIds(p).some(cid => visibleCategoryIds.has(cid)))
-    : products.filter(p => productInCategory(p, activeCategory));
+  const visibleCategories = useMemo(() => categories.filter(c => c.is_visible !== false), [categories]);
+  const filtered = useMemo(() => {
+    if (activeCategory === 'all') {
+      const visibleCategoryIds = new Set(visibleCategories.map(c => c.id));
+      return products.filter(p => getProductCategoryIds(p).some(cid => visibleCategoryIds.has(cid)));
+    }
+    return products.filter(p => productInCategory(p, activeCategory));
+  }, [activeCategory, products, visibleCategories]);
+
+  // 排序：默认沿用接口顺序（分类 + 后台配置的编号）；价格排序以编号作为同价时的稳定次序
+  const sortedProducts = useMemo(() => {
+    if (sortKey === 'default') return filtered;
+    const dir = sortKey === 'priceAsc' ? 1 : -1;
+    return [...filtered].sort((a, b) =>
+      (Number(a.price) - Number(b.price)) * dir || a.sort_order - b.sort_order);
+  }, [filtered, sortKey]);
 
   const getCartQty = (productId: string) =>
     items.find(i => i.product.id === productId)?.quantity ?? 0;
@@ -266,15 +282,30 @@ export default function MenuPage() {
             </Sheet>
           </div>
         </div>
-        <div className="overflow-x-auto whitespace-nowrap px-5 pb-3.5 lg:px-8">
-          <div className="inline-flex gap-2.5">
-            <button onClick={() => setActiveCategory('all')} className={`option-pill ${activeCategory === 'all' ? 'active' : ''}`}>
-              {t.menu.all}
-            </button>
-            {visibleCategories.map(cat => (
-              <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
-                className={`option-pill ${activeCategory === cat.id ? 'active' : ''}`}>
-                {getLocalizedName(cat, lang)}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 pb-3.5 lg:px-8">
+          <div className="flex-1 min-w-[190px] overflow-x-auto whitespace-nowrap">
+            <div className="inline-flex gap-2.5">
+              <button onClick={() => setActiveCategory('all')} className={`option-pill ${activeCategory === 'all' ? 'active' : ''}`}>
+                {t.menu.all}
+              </button>
+              {visibleCategories.map(cat => (
+                <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
+                  className={`option-pill ${activeCategory === cat.id ? 'active' : ''}`}>
+                  {getLocalizedName(cat, lang)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 排序：默认＝后台配置的编号，其余按价格 */}
+          <div className="shrink-0 ml-auto flex items-center gap-1.5" role="group" aria-label={t.menu.sort.label}>
+            <ArrowUpDown className="w-4 h-4 shrink-0 text-muted-foreground/60" aria-hidden="true" />
+            {SORT_KEYS.map(key => (
+              <button key={key} type="button"
+                aria-pressed={sortKey === key}
+                onClick={() => setSortKey(key)}
+                className={`sort-pill ${sortKey === key ? 'active' : ''}`}>
+                {t.menu.sort[key]}
               </button>
             ))}
           </div>
@@ -283,14 +314,14 @@ export default function MenuPage() {
 
       {/* ── 商品网格 ── */}
       <main className="landscape-scroll px-5 py-5 lg:px-8 lg:py-6 container-landscape">
-        {filtered.length === 0 ? (
+        {sortedProducts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-3">
             <UtensilsCrossed className="w-12 h-12 opacity-20" />
             <span className="text-base">{t.menu.noProducts}</span>
           </div>
         ) : (
           <div className="touch-grid">
-            {filtered.map(product => {
+            {sortedProducts.map(product => {
               const qty = getCartQty(product.id);
               const available = product.is_available;
               return (

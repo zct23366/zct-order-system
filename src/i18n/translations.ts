@@ -57,6 +57,13 @@ const ZH = {
     },
     callStaffToast: '请呼叫身边的店员，谢谢',
     callStaffHold: '长按呼叫店员',
+    // ── 商品排序（默认＝后台配置的编号顺序）──
+    sort: {
+      label: '排序方式',
+      default: '默认',
+      priceAsc: '价格 ↑',
+      priceDesc: '价格 ↓',
+    },
   },
   // ── 结算页 ──
   checkout: {
@@ -374,6 +381,13 @@ const JA: Translations = {
     },
     callStaffToast: 'スタッフをお呼びします。少々お待ちください',
     callStaffHold: 'スタッフを呼ぶ',
+    // ── 商品の並び替え（既定＝管理画面で設定した番号順）──
+    sort: {
+      label: '並び替え',
+      default: 'おすすめ順',
+      priceAsc: '安い順',
+      priceDesc: '高い順',
+    },
   },
   checkout: {
     back: 'メニューに戻る',
@@ -679,6 +693,13 @@ const EN: Translations = {
     },
     callStaffToast: 'Calling staff — please wait',
     callStaffHold: 'Call Staff',
+    // ── Item sorting (default = the order number set in admin) ──
+    sort: {
+      label: 'Sort by',
+      default: 'Default',
+      priceAsc: 'Price ↑',
+      priceDesc: 'Price ↓',
+    },
   },
   checkout: {
     back: 'Back to Menu',
@@ -984,6 +1005,13 @@ const KO: Translations = {
     },
     callStaffToast: '직원을 호출 중입니다. 잠시만 기다려 주세요',
     callStaffHold: '직원 호출',
+    // ── 상품 정렬 (기본 = 관리자에서 설정한 번호 순서) ──
+    sort: {
+      label: '정렬 기준',
+      default: '기본순',
+      priceAsc: '가격 ↑',
+      priceDesc: '가격 ↓',
+    },
   },
   checkout: {
     back: '메뉴로 돌아가기',
