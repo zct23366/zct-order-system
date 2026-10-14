@@ -282,24 +282,28 @@ export default function MenuPage() {
             </Sheet>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 pb-3.5 lg:px-8">
-          <div className="flex-1 min-w-[190px] overflow-x-auto whitespace-nowrap">
-            <div className="inline-flex gap-2.5">
-              <button onClick={() => setActiveCategory('all')} className={`option-pill ${activeCategory === 'all' ? 'active' : ''}`}>
-                {t.menu.all}
+        {/* 分类栏 */}
+        <div className="overflow-x-auto whitespace-nowrap px-5 lg:px-8">
+          <div className="inline-flex gap-2.5 pb-2.5">
+            <button onClick={() => setActiveCategory('all')} className={`option-pill ${activeCategory === 'all' ? 'active' : ''}`}>
+              {t.menu.all}
+            </button>
+            {visibleCategories.map(cat => (
+              <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
+                className={`option-pill ${activeCategory === cat.id ? 'active' : ''}`}>
+                {getLocalizedName(cat, lang)}
               </button>
-              {visibleCategories.map(cat => (
-                <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
-                  className={`option-pill ${activeCategory === cat.id ? 'active' : ''}`}>
-                  {getLocalizedName(cat, lang)}
-                </button>
-              ))}
-            </div>
+            ))}
           </div>
+        </div>
 
-          {/* 排序：默认＝后台配置的编号，其余按价格 */}
-          <div className="shrink-0 ml-auto flex items-center gap-1.5" role="group" aria-label={t.menu.sort.label}>
-            <ArrowUpDown className="w-4 h-4 shrink-0 text-muted-foreground/60" aria-hidden="true" />
+        {/* 排序栏：分类下方的小号次级控件（默认＝后台配置的编号，其余按价格） */}
+        <div className="sort-row flex flex-wrap items-center gap-x-3 gap-y-1.5 px-5 pb-3 lg:px-8">
+          <span className="sort-label inline-flex shrink-0 items-center gap-1.5 text-xs tracking-wider text-muted-foreground/70">
+            <ArrowUpDown className="w-3.5 h-3.5" aria-hidden="true" />
+            {t.menu.sort.label}
+          </span>
+          <div className="flex items-center gap-1.5" role="group" aria-label={t.menu.sort.label}>
             {SORT_KEYS.map(key => (
               <button key={key} type="button"
                 aria-pressed={sortKey === key}

@@ -677,56 +677,38 @@ body::after {
 }
 
 /* ═══════════════════════════════════════
-   ↕️ 排序药丸——分类栏右侧的紧凑分段控件
+   ↕️ 排序药丸——分类下方的次级小控件
    ═══════════════════════════════════════ */
 .sort-pill {
-  background:
-    linear-gradient(
-      180deg,
-      rgba(234,215,178,0.05) 0%,
-      rgba(160,120,70,0.03) 100%
-    );
-  border-top: 1px solid rgba(240,218,178,0.14);
-  border-left: 1px solid rgba(220,190,150,0.08);
-  border-right: 1px solid rgba(180,140,80,0.05);
-  border-bottom: 1px solid rgba(120,80,30,0.05);
-  border-radius: 40px;
-  padding: 10px 16px;
-  font-size: 0.9rem;
-  letter-spacing: 0.03em;
+  background: rgba(234,215,178,0.04);
+  border: 1px solid rgba(200,150,100,0.12);
+  border-radius: 20px;
+  padding: 6px 13px;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
   color: hsl(var(--muted-foreground));
   cursor: pointer;
-  transition: all 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
   white-space: nowrap;
   user-select: none;
-  min-height: 44px;
+  min-height: 30px;
   display: inline-flex;
   align-items: center;
   line-height: 1;
 }
 
 .sort-pill:hover {
-  border-top-color: rgba(245,225,190,0.24);
+  border-color: rgba(240,218,178,0.26);
   color: hsl(var(--foreground));
 }
 
 .sort-pill.active,
 .sort-pill[data-active="true"] {
-  background:
-    linear-gradient(
-      180deg,
-      rgba(217,152,59,0.16) 0%,
-      rgba(180,120,50,0.10) 100%
-    );
-  border-top-color: rgba(245,190,100,0.42);
-  border-left-color: rgba(220,160,80,0.25);
-  border-right-color: rgba(200,140,60,0.12);
-  border-bottom-color: rgba(140,90,30,0.10);
+  background: rgba(217,152,59,0.14);
+  border-color: rgba(245,190,100,0.38);
   color: hsl(var(--primary));
   font-weight: 500;
-  box-shadow:
-    0 0 12px rgba(217,152,59,0.12),
-    0 0 24px rgba(217,152,59,0.04);
+  box-shadow: 0 0 10px rgba(217,152,59,0.10);
 }
 
 /* ── 页面入场动画 ── */
@@ -929,6 +911,18 @@ body::after {
 
   /* 触屏按压反馈 */
   .option-pill:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease-out;
+  }
+
+  /* 排序药丸：视觉上仍明显小于分类药丸，但放大到可点范围 */
+  .sort-pill {
+    min-height: 40px;
+    padding: 9px 15px;
+    font-size: 0.82rem;
+  }
+
+  .sort-pill:active {
     transform: scale(0.95);
     transition: transform 0.1s ease-out;
   }
