@@ -65,15 +65,17 @@ export interface Product {
 }
 
 /**
- * 商品所属的全部分类 id：主分类恒在首位，去重后返回。
+ * 商品在菜单里归属的分类 id 列表。
+ * `category_ids` 是展示归属的唯一依据（空数组 = 有意不放进任何分类栏，例如只留历史订单的停产单品）；
+ * 旧数据没有该列时回退到主分类 `category_id`。
  * @param product 至少含 category_id 与 category_ids 的商品
- * @returns 分类 id 列表；category_ids 缺失（旧数据）时退化为 `[category_id]`
+ * @returns 去重后的分类 id 列表
  */
 export function getProductCategoryIds(
   product: Pick<Product, 'category_id'> & { category_ids?: string[] | null }
 ): string[] {
-  const extra = Array.isArray(product.category_ids) ? product.category_ids : [];
-  return Array.from(new Set([product.category_id, ...extra].filter(Boolean)));
+  if (Array.isArray(product.category_ids)) return Array.from(new Set(product.category_ids.filter(Boolean)));
+  return product.category_id ? [product.category_id] : [];
 }
 
 /**

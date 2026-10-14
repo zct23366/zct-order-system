@@ -634,7 +634,8 @@ export default function AdminMenuPage() {
             <div className="flex flex-col gap-3">
               {products.map(prod => {
                 const cat = categories.find(c => c.id === prod.category_id);
-                const extraCatNames = getProductCategoryIds(prod)
+                const productCats = getProductCategoryIds(prod);
+                const extraCatNames = productCats
                   .filter(cid => cid !== prod.category_id)
                   .map(cid => categories.find(c => c.id === cid)?.name)
                   .filter(Boolean);
@@ -664,6 +665,12 @@ export default function AdminMenuPage() {
                       <div className="flex items-center gap-3 mt-1">
                         <span className="text-sm text-primary">¥{Number(prod.price).toFixed(2)}</span>
                         {cat && <span className="text-sm text-muted-foreground">{cat.name}</span>}
+                        {productCats.length === 0 && (
+                          <span className="text-xs px-2 py-0.5 rounded shrink-0"
+                            style={{ background: 'rgba(234,215,178,0.06)', color: 'hsl(var(--muted-foreground))' }}>
+                            {tm.noCategory}
+                          </span>
+                        )}
                         {extraCatNames.length > 0 && (
                           <span className="text-xs px-2 py-0.5 rounded shrink-0"
                             style={{ background: 'rgba(217,152,59,0.10)', color: 'hsl(var(--primary))' }}>
