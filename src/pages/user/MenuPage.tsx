@@ -9,7 +9,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useMenu } from '@/hooks/useData';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Product, ProductOption, CartItemOption } from '@/types/types';
-import { getLocalizedName, getLocalizedDesc, getLocalizedOptionName, getLocalizedSectionContent } from '@/types/types';
+import { getLocalizedName, getLocalizedDesc, getLocalizedOptionName, getLocalizedSectionContent, productInCategory } from '@/types/types';
 import { fetchProductOptions } from '@/services/api';
 
 export default function MenuPage() {
@@ -115,7 +115,7 @@ export default function MenuPage() {
 
   const filtered = activeCategory === 'all'
     ? products
-    : products.filter(p => p.category_id === activeCategory);
+    : products.filter(p => productInCategory(p, activeCategory));
 
   const getCartQty = (productId: string) =>
     items.find(i => i.product.id === productId)?.quantity ?? 0;

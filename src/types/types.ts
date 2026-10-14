@@ -44,7 +44,10 @@ export function getLocalizedSectionContent(sec: DetailSection, lang: string): st
 // 商品
 export interface Product {
   id: string;
+  /** 主分类：分类内排序与旧版回退都用它 */
   category_id: string;
+  /** 该商品出现的全部分类（含主分类）；菜单按它判断商品属于哪些分类 */
+  category_ids: string[];
   name: string;
   name_ja: string | null;
   name_en: string | null;
@@ -59,6 +62,31 @@ export interface Product {
   sort_order: number;
   detail_sections: DetailSection[];
   created_at: string;
+}
+
+/**
+ * 商品所属的全部分类 id：主分类恒在首位，去重后返回。
+ * @param product 至少含 category_id 与 category_ids 的商品
+ * @returns 分类 id 列表；category_ids 缺失（旧数据）时退化为 `[category_id]`
+ */
+export function getProductCategoryIds(
+  product: Pick<Product, 'category_id'> & { category_ids?: string[] | null }
+): string[] {
+  const extra = Array.isArray(product.category_ids) ? product.category_ids : [];
+  return Array.from(new Set([product.category_id, ...extra].filter(Boolean)));
+}
+
+/**
+ * 判断商品是否属于某个分类（多分类：一份数据可出现在多个分类下）。
+ * @param product 至少含 category_id 与 category_ids 的商品
+ * @param categoryId 目标分类 id
+ * @returns 属于该分类时为 true
+ */
+export function productInCategory(
+  product: Pick<Product, 'category_id'> & { category_ids?: string[] | null },
+  categoryId: string
+): boolean {
+  return getProductCategoryIds(product).includes(categoryId);
 }
 
 // i18n 辅助：获取当前语言的名称（无则回退中文）

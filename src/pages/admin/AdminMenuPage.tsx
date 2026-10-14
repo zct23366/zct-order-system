@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -40,6 +41,7 @@ import {
   softDeleteProductOption,
 } from '@/services/api';
 import type { Category, Product, DetailSection, ProductOption } from '@/types/types';
+import { getProductCategoryIds } from '@/types/types';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LANG_LABELS, LANG_EMOJIS, type Lang } from '@/i18n/translations';
 
@@ -407,6 +409,7 @@ export default function AdminMenuPage() {
   const [prodDescI18n, setProdDescI18n] = useState<Record<Lang, string>>({ zh: '', ja: '', en: '', ko: '' });
   const [prodPrice, setProdPrice] = useState('');
   const [prodCategory, setProdCategory] = useState('');
+  const [prodExtraCategories, setProdExtraCategories] = useState<string[]>([]);
   const [prodAvailable, setProdAvailable] = useState(true);
   const [prodOrder, setProdOrder] = useState(0);
   const [prodImageUrl, setProdImageUrl] = useState('');
@@ -479,6 +482,7 @@ export default function AdminMenuPage() {
     setProdDescI18n({ zh: '', ja: '', en: '', ko: '' });
     setProdPrice('');
     setProdCategory(categories[0]?.id ?? '');
+    setProdExtraCategories([]);
     setProdAvailable(true);
     setProdOrder(products.length + 1);
     setProdImageUrl('');
@@ -494,6 +498,7 @@ export default function AdminMenuPage() {
     setProdDescI18n({ zh: '', ja: prod.description_ja ?? '', en: prod.description_en ?? '', ko: prod.description_ko ?? '' });
     setProdPrice(String(prod.price));
     setProdCategory(prod.category_id);
+    setProdExtraCategories(getProductCategoryIds(prod).filter(cid => cid !== prod.category_id));
     setProdAvailable(prod.is_available);
     setProdOrder(prod.sort_order);
     setProdImageUrl(prod.image_url ?? '');
@@ -559,6 +564,7 @@ export default function AdminMenuPage() {
         description_ko: prodDescI18n.ko.trim() || null,
         price: Number(prodPrice),
         category_id: prodCategory,
+        category_ids: Array.from(new Set([prodCategory, ...prodExtraCategories])).filter(Boolean),
         is_available: prodAvailable,
         sort_order: prodOrder,
         image_url: prodImageUrl || null,
@@ -628,6 +634,10 @@ export default function AdminMenuPage() {
             <div className="flex flex-col gap-3">
               {products.map(prod => {
                 const cat = categories.find(c => c.id === prod.category_id);
+                const extraCatNames = getProductCategoryIds(prod)
+                  .filter(cid => cid !== prod.category_id)
+                  .map(cid => categories.find(c => c.id === cid)?.name)
+                  .filter(Boolean);
                 const hasSections = (prod.detail_sections ?? []).length > 0;
                 return (
                   <div key={prod.id} className="glass-card relative rounded-2xl p-4 flex items-center gap-4 overflow-hidden">
@@ -654,6 +664,12 @@ export default function AdminMenuPage() {
                       <div className="flex items-center gap-3 mt-1">
                         <span className="text-sm text-primary">¥{Number(prod.price).toFixed(2)}</span>
                         {cat && <span className="text-sm text-muted-foreground">{cat.name}</span>}
+                        {extraCatNames.length > 0 && (
+                          <span className="text-xs px-2 py-0.5 rounded shrink-0"
+                            style={{ background: 'rgba(217,152,59,0.10)', color: 'hsl(var(--primary))' }}>
+                            + {extraCatNames.join(' / ')}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="flex gap-1 shrink-0">
@@ -826,6 +842,23 @@ export default function AdminMenuPage() {
                   {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
+
+              {categories.length > 1 && (
+                <div className="flex flex-col gap-2">
+                  <Label className="text-base">{tm.prodExtraCategories}</Label>
+                  <p className="text-xs text-muted-foreground -mt-1">{tm.prodExtraCategoriesHint}</p>
+                  <div className="flex flex-col gap-1.5">
+                    {categories.filter(c => c.id !== prodCategory).map(c => (
+                      <label key={c.id} className="flex items-center gap-2.5 px-3 h-10 rounded-xl cursor-pointer select-none"
+                        style={{ background: 'rgba(234,215,178,0.03)', border: '1px solid rgba(200,150,100,0.12)' }}>
+                        <Checkbox checked={prodExtraCategories.includes(c.id)}
+                          onCheckedChange={v => setProdExtraCategories(prev => v ? [...prev, c.id] : prev.filter(x => x !== c.id))} />
+                        <span className="text-sm text-foreground">{c.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="flex items-center justify-between py-1 min-h-[44px]">
                 <Label className="text-base">{tm.prodAvailable}</Label>

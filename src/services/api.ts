@@ -43,11 +43,11 @@ export async function updateCategory(
 }
 
 export async function deleteCategory(id: string): Promise<void> {
-  // 检查是否有商品
+  // 检查是否有商品（多分类：主分类或 category_ids 里含该分类都算）
   const { count } = await supabase
     .from('products')
     .select('id', { count: 'exact', head: true })
-    .eq('category_id', id);
+    .or(`category_id.eq.${id},category_ids.cs.{${id}}`);
   if (count && count > 0) throw new Error('该分类下有商品，无法删除');
   const { error } = await supabase.from('categories').delete().eq('id', id);
   if (error) throw error;
@@ -65,6 +65,7 @@ export async function fetchProducts(): Promise<Product[]> {
   return (Array.isArray(data) ? data : []).map(p => ({
     ...p,
     detail_sections: Array.isArray(p.detail_sections) ? p.detail_sections : [],
+    category_ids: Array.isArray(p.category_ids) ? p.category_ids : [p.category_id],
   }));
 }
 
@@ -76,7 +77,11 @@ export async function fetchProductById(id: string): Promise<Product | null> {
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;
-  return { ...data, detail_sections: Array.isArray(data.detail_sections) ? data.detail_sections : [] };
+  return {
+    ...data,
+    detail_sections: Array.isArray(data.detail_sections) ? data.detail_sections : [],
+    category_ids: Array.isArray(data.category_ids) ? data.category_ids : [data.category_id],
+  };
 }
 
 export async function createProduct(product: Omit<Product, 'id' | 'created_at'>): Promise<void> {
