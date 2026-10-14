@@ -20,15 +20,16 @@ export async function fetchCategories(): Promise<Category[]> {
     .order('sort_order', { ascending: true })
     .limit(100);
   if (error) throw error;
-  return Array.isArray(data) ? data : [];
+  return (Array.isArray(data) ? data : []).map(c => ({ ...c, is_visible: c.is_visible !== false }));
 }
 
 export async function createCategory(
   name: string,
   sort_order: number,
-  i18n?: { name_ja?: string; name_en?: string; name_ko?: string }
+  i18n?: { name_ja?: string; name_en?: string; name_ko?: string },
+  is_visible: boolean = true
 ): Promise<void> {
-  const { error } = await supabase.from('categories').insert({ name, sort_order, ...i18n });
+  const { error } = await supabase.from('categories').insert({ name, sort_order, is_visible, ...i18n });
   if (error) throw error;
 }
 
@@ -36,9 +37,10 @@ export async function updateCategory(
   id: string,
   name: string,
   sort_order: number,
-  i18n?: { name_ja?: string; name_en?: string; name_ko?: string }
+  i18n?: { name_ja?: string; name_en?: string; name_ko?: string },
+  is_visible: boolean = true
 ): Promise<void> {
-  const { error } = await supabase.from('categories').update({ name, sort_order, ...i18n }).eq('id', id);
+  const { error } = await supabase.from('categories').update({ name, sort_order, is_visible, ...i18n }).eq('id', id);
   if (error) throw error;
 }
 

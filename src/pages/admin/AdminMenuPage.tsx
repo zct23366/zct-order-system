@@ -398,6 +398,7 @@ export default function AdminMenuPage() {
   const [catName, setCatName] = useState('');
   const [catOrder, setCatOrder] = useState(0);
   const [catI18n, setCatI18n] = useState<Record<Lang, string>>({ zh: '', ja: '', en: '', ko: '' });
+  const [catVisible, setCatVisible] = useState(true);
   const [deleteCat, setDeleteCat] = useState<Category | null>(null);
 
   // ── 商品状态 ─────────────────────────────────────────
@@ -428,6 +429,7 @@ export default function AdminMenuPage() {
     setCatName('');
     setCatOrder(categories.length + 1);
     setCatI18n({ zh: '', ja: '', en: '', ko: '' });
+    setCatVisible(true);
     setCatDialogOpen(true);
   };
 
@@ -436,6 +438,7 @@ export default function AdminMenuPage() {
     setCatName(cat.name);
     setCatOrder(cat.sort_order);
     setCatI18n({ zh: '', ja: cat.name_ja ?? '', en: cat.name_en ?? '', ko: cat.name_ko ?? '' });
+    setCatVisible(cat.is_visible !== false);
     setCatDialogOpen(true);
   };
 
@@ -445,10 +448,10 @@ export default function AdminMenuPage() {
     try {
       const i18n = { name_ja: catI18n.ja.trim() || undefined, name_en: catI18n.en.trim() || undefined, name_ko: catI18n.ko.trim() || undefined };
       if (editingCat) {
-        await updateCategory(editingCat.id, catName.trim(), catOrder, i18n);
+        await updateCategory(editingCat.id, catName.trim(), catOrder, i18n, catVisible);
         toast.success(tm.categoryUpdated);
       } else {
-        await createCategory(catName.trim(), catOrder, i18n);
+        await createCategory(catName.trim(), catOrder, i18n, catVisible);
         toast.success(tm.categoryCreated);
       }
       setCatDialogOpen(false);
@@ -714,6 +717,12 @@ export default function AdminMenuPage() {
                 <div className="flex-1 min-w-0">
                   <span className="text-base font-medium text-foreground">{cat.name}</span>
                   {(cat.name_ja || cat.name_en || cat.name_ko) && <Globe className="w-3.5 h-3.5 inline ml-2 text-primary/60" />}
+                  {cat.is_visible === false && (
+                    <span className="text-xs px-2 py-0.5 rounded ml-2"
+                      style={{ background: 'rgba(234,215,178,0.06)', color: 'hsl(var(--muted-foreground))' }}>
+                      {tm.catHidden}
+                    </span>
+                  )}
                   <span className="text-sm text-muted-foreground ml-3">#{cat.sort_order}</span>
                 </div>
                 <div className="flex gap-2 shrink-0">
@@ -760,6 +769,13 @@ export default function AdminMenuPage() {
             <div className="flex flex-col gap-2">
               <Label className="text-base">{tm.catOrder}</Label>
               <Input type="number" value={catOrder} onChange={e => setCatOrder(Number(e.target.value))} className="h-11 px-4 text-base" />
+            </div>
+            <div className="flex items-center justify-between gap-4 py-1 min-h-[44px]">
+              <div className="flex flex-col gap-0.5">
+                <Label className="text-base">{tm.catVisible}</Label>
+                <span className="text-xs text-muted-foreground">{tm.catVisibleHint}</span>
+              </div>
+              <Switch checked={catVisible} onCheckedChange={setCatVisible} />
             </div>
           </div>
           <DialogFooter>
@@ -846,7 +862,9 @@ export default function AdminMenuPage() {
                 <Label className="text-base">{tm.prodCategory}</Label>
                 <select value={prodCategory} onChange={e => setProdCategory(e.target.value)}
                   className="border border-input rounded-xl px-4 h-11 text-base bg-background text-foreground">
-                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  {categories.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}{c.is_visible === false ? `（${tm.catHidden}）` : ''}</option>
+                  ))}
                 </select>
               </div>
 
@@ -860,7 +878,7 @@ export default function AdminMenuPage() {
                         style={{ background: 'rgba(234,215,178,0.03)', border: '1px solid rgba(200,150,100,0.12)' }}>
                         <Checkbox checked={prodExtraCategories.includes(c.id)}
                           onCheckedChange={v => setProdExtraCategories(prev => v ? [...prev, c.id] : prev.filter(x => x !== c.id))} />
-                        <span className="text-sm text-foreground">{c.name}</span>
+                        <span className="text-sm text-foreground">{c.name}{c.is_visible === false ? `（${tm.catHidden}）` : ''}</span>
                       </label>
                     ))}
                   </div>

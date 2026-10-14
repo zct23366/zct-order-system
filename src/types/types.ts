@@ -19,6 +19,8 @@ export interface Category {
   name_en: string | null;
   name_ko: string | null;
   sort_order: number;
+  /** false = 不作为顾客端分类栏出现，其商品也不进入「全部」栏（用于停售/归档分类） */
+  is_visible: boolean;
   created_at: string;
 }
 

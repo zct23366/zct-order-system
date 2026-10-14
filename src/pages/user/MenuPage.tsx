@@ -9,7 +9,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useMenu } from '@/hooks/useData';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Product, ProductOption, CartItemOption } from '@/types/types';
-import { getLocalizedName, getLocalizedDesc, getLocalizedOptionName, getLocalizedSectionContent, productInCategory } from '@/types/types';
+import { getLocalizedName, getLocalizedDesc, getLocalizedOptionName, getLocalizedSectionContent, productInCategory, getProductCategoryIds } from '@/types/types';
 import { fetchProductOptions } from '@/services/api';
 
 export default function MenuPage() {
@@ -113,8 +113,11 @@ export default function MenuPage() {
     }
   }, [navigate]);
 
+  // 顾客端只显示可见分类；「全部」栏也只列属于可见分类的商品（隐藏分类＝停售归档）
+  const visibleCategories = categories.filter(c => c.is_visible !== false);
+  const visibleCategoryIds = new Set(visibleCategories.map(c => c.id));
   const filtered = activeCategory === 'all'
-    ? products
+    ? products.filter(p => getProductCategoryIds(p).some(cid => visibleCategoryIds.has(cid)))
     : products.filter(p => productInCategory(p, activeCategory));
 
   const getCartQty = (productId: string) =>
@@ -268,7 +271,7 @@ export default function MenuPage() {
             <button onClick={() => setActiveCategory('all')} className={`option-pill ${activeCategory === 'all' ? 'active' : ''}`}>
               {t.menu.all}
             </button>
-            {categories.map(cat => (
+            {visibleCategories.map(cat => (
               <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
                 className={`option-pill ${activeCategory === cat.id ? 'active' : ''}`}>
                 {getLocalizedName(cat, lang)}
