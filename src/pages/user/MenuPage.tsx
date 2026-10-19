@@ -163,19 +163,10 @@ export default function MenuPage() {
       {/* ── 顶部栏 ── */}
       <header className="shrink-0 z-30 border-b"
         style={{ background: 'hsl(20 28% 5% / 0.92)', backdropFilter: 'blur(32px)', borderColor: 'rgba(200,150,100,0.08)' }}>
-        <div className="flex items-center gap-2 justify-between px-5 py-3.5 lg:px-8 lg:py-4 container-landscape">
-          <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
+        <div className="flex items-center gap-2 justify-between px-5 py-2 lg:px-8 lg:py-2.5 container-landscape">
+          <div className="flex items-center min-w-0 flex-1 mr-2">
             <div className="relative shrink-0">
               <UtensilsCrossed className="w-6 h-6 text-primary" style={{ filter: 'drop-shadow(0 0 8px rgba(217,152,59,0.4))' }} />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-xl lg:text-2xl text-foreground tracking-wider truncate"
-                style={{ fontFamily: "'Noto Serif SC','STSong','Songti SC',serif", letterSpacing: '0.08em' }}>
-                {t.appTitle}
-              </h1>
-              <p className="text-xs text-muted-foreground tracking-widest hidden lg:block" style={{ letterSpacing: '0.12em' }}>
-                {t.appSubtitle}
-              </p>
             </div>
           </div>
 

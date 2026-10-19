@@ -6,26 +6,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <!--
       iPad 等比缩放脚本：
-      检测到平板尺寸（768–1279 CSS px）时，将设计宽度固定为 1280px，
-      并计算 initial-scale 使其等比缩小以完整显示 PC 布局。
+      检测到平板尺寸（768–1279 CSS px）时，按 FIT_WIDTH 排版并计算 initial-scale，
+      让 PC 布局完整铺满屏幕；平板上默认放大到 120%（FIT_WIDTH = 1280 / 1.2）。
       手机 (<768px) 和桌面 (≥1280px) 保持原始响应式 viewport。
     -->
     <script>
       (function () {
-        var DESIGN_WIDTH = 1280;
+        var DESIGN_WIDTH = 1280;                       // PC 布局的设计宽度
+        var ZOOM = 1.2;                                // 平板默认放大倍数
+        var FIT_WIDTH = Math.round(DESIGN_WIDTH / ZOOM); // 1067：放大 1.2 倍后能放下 1280 画面的宽度
         var meta = document.querySelector('meta[name="viewport"]');
 
-        function applyScale() {
-          // 短边作为设备宽度判断依据（排除横竖屏干扰）
-          var portrait = Math.min(screen.width, screen.height);
-          var currentW = window.innerWidth || screen.width;
+        // 屏幕短边/长边换算成当前朝向的宽度。
+        // 不要用 window.innerWidth：写下 width= 之后它就是版面宽度，
+        // 再拿它算比例会自我放大，一次 resize 就锁成 scale=1、内容溢出屏幕。
+        function deviceWidth() {
+          var w = screen.width || window.innerWidth;
+          var h = screen.height || window.innerHeight;
+          var landscape = window.matchMedia
+            ? window.matchMedia('(orientation: landscape)').matches
+            : w > h;
+          return landscape ? Math.max(w, h) : Math.min(w, h);
+        }
 
-          if (portrait >= 768 && portrait < DESIGN_WIDTH) {
-            // iPad：当前视口宽度 < 设计宽度时等比缩小
-            var scale = Math.min(currentW / DESIGN_WIDTH, 1).toFixed(4);
+        function applyScale() {
+          var shortSide = Math.min(screen.width || 0, screen.height || 0);
+
+          if (shortSide >= 768 && shortSide < DESIGN_WIDTH) {
+            // 平板：按 FIT_WIDTH 排版，放大到 120% 后铺满屏幕
+            var scale = Math.min(deviceWidth() / FIT_WIDTH, ZOOM).toFixed(4);
             meta.setAttribute(
               'content',
-              'width=' + DESIGN_WIDTH +
+              'width=' + FIT_WIDTH +
               ', initial-scale=' + scale +
               ', minimum-scale=0.1' +
               ', maximum-scale=5' +
