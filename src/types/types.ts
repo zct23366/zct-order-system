@@ -198,6 +198,34 @@ export interface ProductOption {
   created_at: string;
 }
 
+// 套餐分组：一个套餐由若干组构成，顾客每组选一项
+export interface ComboGroup {
+  id: string;
+  product_id: string;
+  title: string;
+  title_ja: string | null;
+  title_en: string | null;
+  title_ko: string | null;
+  sort_order: number;
+}
+
+// 套餐选项：某个分组下可选的一个商品，price_delta 是在套餐价上的加减
+export interface ComboOption {
+  id: string;
+  group_id: string;
+  product: Product;
+  price_delta: number;
+  sort_order: number;
+}
+
+/** 取当前语言的分组标题（空则回退中文） */
+export function getLocalizedGroupTitle(group: ComboGroup, lang: Lang): string {
+  if (lang === 'ja' && group.title_ja) return group.title_ja;
+  if (lang === 'en' && group.title_en) return group.title_en;
+  if (lang === 'ko' && group.title_ko) return group.title_ko;
+  return group.title;
+}
+
 // 订单明细中的已选选项快照
 export interface OrderItemOption {
   id: string;

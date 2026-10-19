@@ -680,6 +680,15 @@ body::after {
 /* ═══════════════════════════════════════
    ↕️ 排序药丸——分类下方的次级小控件
    ═══════════════════════════════════════ */
+/* 套餐二级页面：切换分组时的入场过渡 */
+@keyframes comboStepIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.combo-step {
+  animation: comboStepIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 /* 分类条右端渐隐：滚动的药丸滚到排序控件下方时淡出，而不是被裁出一条硬边 */
 .category-fade {
   -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 72px), transparent 100%);

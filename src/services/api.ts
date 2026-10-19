@@ -10,7 +10,37 @@ import type {
   PaymentMethod,
   CartItem,
   ProductOption,
+  ComboGroup,
+  ComboOption,
 } from '@/types/types';
+
+// ─── 套餐组合 ─────────────────────────────────────────────
+/**
+ * 拉取全部套餐分组与选项（选项内嵌商品，用于取名称与图片）。
+ * @returns 分组与其选项，均按 sort_order 升序
+ */
+export async function fetchComboCatalog(): Promise<{ groups: ComboGroup[]; options: ComboOption[] }> {
+  const [{ data: groups, error: gErr }, { data: options, error: oErr }] = await Promise.all([
+    supabase.from('combo_groups').select('*').order('sort_order', { ascending: true }),
+    supabase
+      .from('combo_options')
+      .select('id, group_id, price_delta, sort_order, product:products(*)')
+      .eq('enabled', true)
+      .order('sort_order', { ascending: true }),
+  ]);
+  if (gErr) throw gErr;
+  if (oErr) throw oErr;
+  return {
+    groups: (Array.isArray(groups) ? groups : []) as ComboGroup[],
+    options: (Array.isArray(options) ? options : []).map(o => ({
+      id: o.id,
+      group_id: o.group_id,
+      price_delta: Number(o.price_delta),
+      sort_order: o.sort_order,
+      product: (o as unknown as { product: Product }).product,
+    })).filter(o => !!o.product),
+  };
+}
 
 // ─── 分类 ───────────────────────────────────────────────
 export async function fetchCategories(): Promise<Category[]> {

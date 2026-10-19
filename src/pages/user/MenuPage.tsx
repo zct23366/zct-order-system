@@ -9,7 +9,10 @@ import { useMenu } from '@/hooks/useData';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Product, ProductOption, CartItemOption } from '@/types/types';
 import { getLocalizedName, getLocalizedDesc, getLocalizedOptionName, getLocalizedSectionContent, productInCategory, getProductCategoryIds } from '@/types/types';
-import { fetchProductOptions } from '@/services/api';
+import type { ComboGroup, ComboOption } from '@/types/types';
+import { fetchProductOptions, fetchComboCatalog } from '@/services/api';
+import ComboPage from '@/components/menu/ComboPage';
+import { comboTextOf } from '@/i18n/comboText';
 
 /** 商品排序方式：默认＝后台配置的编号顺序，其余按价格。 */
 type SortKey = 'default' | 'priceAsc' | 'priceDesc';
@@ -32,6 +35,46 @@ export default function MenuPage() {
   // ── 自定义选项状态 ──
   const [options, setOptions] = useState<ProductOption[]>([]);
   const [optQty, setOptQty] = useState<Record<string, number>>({}); // optionId → qty
+
+  // ── 套餐二级页面状态 ──
+  const [comboProduct, setComboProduct] = useState<Product | null>(null);
+  const [comboGroups, setComboGroups] = useState<ComboGroup[]>([]);
+  const [comboOptions, setComboOptions] = useState<ComboOption[]>([]);
+
+  useEffect(() => {
+    let alive = true;
+    fetchComboCatalog()
+      .then(({ groups, options }) => {
+        if (!alive) return;
+        setComboGroups(groups);
+        setComboOptions(options);
+      })
+      .catch(() => { /* 没有套餐数据时菜单照常工作 */ });
+    return () => { alive = false; };
+  }, []);
+
+  /** 该商品配置了套餐分组就进套餐二级页，否则走普通详情弹层 */
+  const openProduct = (product: Product) => {
+    const hasCombo = comboGroups.some(g => g.product_id === product.id);
+    if (hasCombo) {
+      setComboProduct(product);
+      return;
+    }
+    void openDetail(product);
+  };
+
+  const handleComboConfirm = (picked: ComboOption[]) => {
+    if (!comboProduct) return;
+    const selectedOptions: CartItemOption[] = picked.map(o => ({
+      option_id: o.id,
+      name_snapshot: getLocalizedName(o.product, lang),
+      quantity: 1,
+      unit_price: o.price_delta,
+    }));
+    addItem(comboProduct, selectedOptions);
+    toast.success(`${getLocalizedName(comboProduct, lang)} · ${t.menu.detail.addToCart}`, { duration: 1600 });
+    setComboProduct(null);
+  };
 
   const openDetail = async (product: Product) => {
     setDetailProduct(product);
@@ -323,7 +366,7 @@ export default function MenuPage() {
               return (
                 <div key={product.id}
                   className={`glass-card rounded-2xl overflow-hidden flex flex-col relative ${available ? 'cursor-pointer group' : 'opacity-50 pointer-events-none'}`}
-                  onClick={() => available && openDetail(product)}>
+                  onClick={() => available && openProduct(product)}>
                   <div className="aspect-[4/3] overflow-hidden image-frame relative">
                     {product.image_url
                       ? <img src={product.image_url} alt={getLocalizedName(product, lang)} className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" />
@@ -444,6 +487,25 @@ export default function MenuPage() {
           </button>
         </div>
       </div>
+
+      {/* ── 套餐二级页面 ── */}
+      {comboProduct && (() => {
+        const groups = comboGroups
+          .filter(g => g.product_id === comboProduct.id)
+          .sort((a, b) => a.sort_order - b.sort_order);
+        if (groups.length === 0) return null;
+        return (
+          <ComboPage
+            product={comboProduct}
+            groups={groups}
+            options={comboOptions}
+            text={comboTextOf(lang)}
+            lang={lang}
+            onClose={() => setComboProduct(null)}
+            onConfirm={handleComboConfirm}
+          />
+        );
+      })()}
 
       {/* ── 商品详情弹窗 ── */}
       {detailProduct && (
