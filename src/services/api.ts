@@ -297,6 +297,32 @@ export async function updateOrderStatus(orderId: string, newStatus: OrderStatus)
   if (error) throw error;
 }
 
+/**
+ * 标记普通菜品是否已制作完成（落库，刷新/换设备都保留）。
+ * @param orderItemId order_items.id
+ * @param made 是否已完成
+ */
+export async function setOrderItemMade(orderItemId: string, made: boolean): Promise<void> {
+  const { error } = await supabase
+    .from('order_items')
+    .update({ made })
+    .eq('id', orderItemId);
+  if (error) throw error;
+}
+
+/**
+ * 标记套餐里的单个单品是否已制作完成（记在 order_item_options.made 上）。
+ * @param optionRowId order_item_options.id
+ * @param made 是否已完成
+ */
+export async function setOrderItemOptionMade(optionRowId: string, made: boolean): Promise<void> {
+  const { error } = await supabase
+    .from('order_item_options')
+    .update({ made })
+    .eq('id', optionRowId);
+  if (error) throw error;
+}
+
 // ─── 商品自定义选项 ─────────────────────────────────────────────
 /** 读取某商品的所有启用选项（含未软删除） */
 export async function fetchProductOptions(productId: string): Promise<ProductOption[]> {

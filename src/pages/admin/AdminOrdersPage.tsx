@@ -20,7 +20,7 @@ import {
 import { toast } from 'sonner';
 import { useOrders, usePrintConfig } from '@/hooks/useData';
 import { usePrint } from '@/hooks/usePrint';
-import { updateOrderStatus, fetchOrderWithItems } from '@/services/api';
+import { updateOrderStatus, fetchOrderWithItems, setOrderItemMade, setOrderItemOptionMade } from '@/services/api';
 import type { OrderWithItems, OrderStatus } from '@/types/types';
 import {
   PAYMENT_METHOD_LABELS,
@@ -37,45 +37,93 @@ const STATUS_CLASS: Record<string, string> = {
   cancelled: 'status-cancelled',
 };
 
-function ProductChips({ order, greyedItems, onToggle }: {
+/** 一张「已完成」样式的小卡（点击切换制作状态） */
+function MadeChip({
+  label, qty, made, onToggle, sub,
+}: {
+  label: string;
+  qty: number;
+  made: boolean;
+  onToggle: () => void;
+  sub?: string;
+}) {
+  return (
+    <button
+      onClick={e => { e.stopPropagation(); onToggle(); }}
+      className="flex flex-col gap-0.5 px-2.5 py-1.5 rounded-lg text-sm transition-all select-none text-left"
+      style={{
+        background: made ? 'rgba(120,110,100,0.12)' : 'rgba(234,215,178,0.07)',
+        border: `1px solid ${made ? 'rgba(120,110,100,0.18)' : 'rgba(234,215,178,0.14)'}`,
+        opacity: made ? 0.45 : 1,
+        textDecoration: made ? 'line-through' : 'none',
+        color: made ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
+      }}
+    >
+      <div className="flex items-center gap-1.5">
+        <UtensilsCrossed className="w-3 h-3 shrink-0" style={{ opacity: made ? 0.5 : 0.7 }} />
+        <span className="truncate max-w-[10rem]">{label}</span>
+        {qty > 1 && <span className="text-xs text-muted-foreground shrink-0">×{qty}</span>}
+      </div>
+      {sub && (
+        <div className="flex items-center gap-1 pl-4 text-xs text-muted-foreground leading-tight">
+          <span className="text-primary/40 shrink-0">+</span>
+          <span className="truncate max-w-[9rem]">{sub}</span>
+        </div>
+      )}
+    </button>
+  );
+}
+
+/**
+ * 订单里的菜品卡片。
+ * 套餐（选项行 option_id 为 null）不再把单品塞在副行里，而是让每个单品独立成卡，
+ * 各自勾选「制作完成」并落库；普通菜品仍是一张卡（加料作为副行显示）。
+ */
+function ProductChips({ order, onToggleItem, onToggleOption }: {
   order: OrderWithItems;
-  greyedItems: Set<string>;
-  onToggle: (itemId: string) => void;
+  onToggleItem: (itemId: string, made: boolean) => void;
+  onToggleOption: (rowId: string, made: boolean) => void;
 }) {
   if (!order.order_items?.length) return null;
   return (
     <div className="flex flex-wrap gap-2 pt-1">
-      {order.order_items.map(item => {
-        const greyed = greyedItems.has(item.id);
-        return (
-          <button
+      {order.order_items.flatMap(item => {
+        const rows = (item.order_item_options ?? []).filter(o => o.quantity > 0);
+        const parts = rows.filter(o => o.option_id === null);
+        const modifiers = rows.filter(o => o.option_id !== null);
+
+        if (parts.length > 0) {
+          // 套餐：主卡只做标识（不可勾），每个单品一张独立的完成卡
+          return [
+            <div key={item.id}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm"
+              style={{ background: 'rgba(217,152,59,0.08)', border: '1px solid rgba(217,152,59,0.20)' }}>
+              <Sparkles className="w-3 h-3 shrink-0 text-primary/70" />
+              <span className="truncate max-w-[9rem] text-primary/90">{item.product_name}</span>
+              {item.quantity > 1 && <span className="text-xs text-primary/60 shrink-0">×{item.quantity}</span>}
+            </div>,
+            ...parts.map(part => (
+              <MadeChip
+                key={part.id}
+                label={part.option_name}
+                qty={item.quantity}
+                made={!!part.made}
+                onToggle={() => onToggleOption(part.id, !part.made)}
+              />
+            )),
+          ];
+        }
+
+        return [
+          <MadeChip
             key={item.id}
-            onClick={e => { e.stopPropagation(); onToggle(item.id); }}
-            className="flex flex-col gap-0.5 px-2.5 py-1.5 rounded-lg text-sm transition-all select-none text-left"
-            style={{
-              background: greyed ? 'rgba(120,110,100,0.12)' : 'rgba(234,215,178,0.07)',
-              border: `1px solid ${greyed ? 'rgba(120,110,100,0.18)' : 'rgba(234,215,178,0.14)'}`,
-              opacity: greyed ? 0.45 : 1,
-              textDecoration: greyed ? 'line-through' : 'none',
-              color: greyed ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
-            }}
-          >
-            {/* 主行：图标 + 商品名 + 数量 */}
-            <div className="flex items-center gap-1.5">
-              <UtensilsCrossed className="w-3 h-3 shrink-0" style={{ opacity: greyed ? 0.5 : 0.7 }} />
-              <span className="truncate max-w-[10rem]">{item.product_name}</span>
-              {item.quantity > 1 && <span className="text-xs text-muted-foreground shrink-0">×{item.quantity}</span>}
-            </div>
-            {/* 已选选项副行 */}
-            {(item.order_item_options ?? []).filter(o => o.quantity > 0).map(opt => (
-              <div key={opt.id} className="flex items-center gap-1 pl-4 text-xs text-muted-foreground leading-tight">
-                <span className="text-primary/40 shrink-0">+</span>
-                <span className="truncate max-w-[9rem]">{opt.option_name}</span>
-                {opt.quantity > 1 && <span className="shrink-0">×{opt.quantity}</span>}
-              </div>
-            ))}
-          </button>
-        );
+            label={item.product_name}
+            qty={item.quantity}
+            made={!!item.made}
+            sub={modifiers[0]?.option_name}
+            onToggle={() => onToggleItem(item.id, !item.made)}
+          />,
+        ];
       })}
     </div>
   );
@@ -100,7 +148,6 @@ export default function AdminOrdersPage() {
   const [deleteTarget, setDeleteTarget] = useState<OrderWithItems | null>(null);
   const [detailOrder, setDetailOrder] = useState<OrderWithItems | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
-  const [greyedMap, setGreyedMap] = useState<Map<string, Set<string>>>(new Map());
 
   const statusFilter = activeTab === 'all' ? undefined : [activeTab];
   const { orders, loading, reload } = useOrders(statusFilter, 3000);
@@ -118,15 +165,24 @@ export default function AdminOrdersPage() {
     }
   }, [printOrder]);
 
-  const toggleGreyed = useCallback((orderId: string, itemId: string) => {
-    setGreyedMap(prev => {
-      const next = new Map(prev);
-      const set = new Set(next.get(orderId) ?? []);
-      if (set.has(itemId)) set.delete(itemId); else set.add(itemId);
-      next.set(orderId, set);
-      return next;
-    });
-  }, []);
+  // 制作完成状态直接落库（刷新、另一台设备都能同步）
+  const handleToggleItemMade = useCallback(async (itemId: string, made: boolean) => {
+    try {
+      await setOrderItemMade(itemId, made);
+      await reload();
+    } catch {
+      toast.error('更新制作状态失败');
+    }
+  }, [reload]);
+
+  const handleToggleOptionMade = useCallback(async (rowId: string, made: boolean) => {
+    try {
+      await setOrderItemOptionMade(rowId, made);
+      await reload();
+    } catch {
+      toast.error('更新制作状态失败');
+    }
+  }, [reload]);
 
   const handleAdvance = (order: OrderWithItems) => {
     const next = getNextStatus(order.status);
@@ -243,8 +299,8 @@ export default function AdminOrdersPage() {
 
               <ProductChips
                 order={order}
-                greyedItems={greyedMap.get(order.id) ?? new Set()}
-                onToggle={(itemId) => toggleGreyed(order.id, itemId)}
+                onToggleItem={handleToggleItemMade}
+                onToggleOption={handleToggleOptionMade}
               />
 
               <div className="flex items-center gap-4 text-sm text-muted-foreground">

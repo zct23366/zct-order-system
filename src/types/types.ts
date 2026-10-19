@@ -132,6 +132,8 @@ export interface OrderItem {
   product_price: number;
   quantity: number;
   subtotal: number;
+  /** 该菜品是否已制作完成（套餐以单品为单位记在 order_item_options.made 上） */
+  made?: boolean;
   // 关联的已选选项快照（可选，仅在关联查询时存在）
   order_item_options?: OrderItemOption[];
 }
@@ -235,6 +237,8 @@ export interface OrderItemOption {
   quantity: number;
   unit_price: number;
   subtotal: number;
+  /** 套餐单品是否已制作完成；普通加料恒为 false，不参与勾选 */
+  made?: boolean;
 }
 
 // 获取选项当前语言名称（回退中文）
