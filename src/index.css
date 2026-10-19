@@ -630,15 +630,15 @@ body::after {
   border-right: 1px solid rgba(180,140,80,0.05);
   border-bottom: 1px solid rgba(120,80,30,0.06);
   border-radius: 48px;
-  padding: 14px 30px;
-  font-size: 1.05rem;
+  padding: 9px 20px;
+  font-size: 0.95rem;
   letter-spacing: 0.04em;
   color: hsl(var(--muted-foreground));
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
   white-space: nowrap;
   user-select: none;
-  min-height: 54px;
+  min-height: 42px;
   display: inline-flex;
   align-items: center;
   line-height: 1;
@@ -683,15 +683,15 @@ body::after {
   background: rgba(234,215,178,0.04);
   border: 1px solid rgba(200,150,100,0.12);
   border-radius: 20px;
-  padding: 6px 13px;
-  font-size: 0.78rem;
+  padding: 4px 10px;
+  font-size: 0.74rem;
   letter-spacing: 0.02em;
   color: hsl(var(--muted-foreground));
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
   white-space: nowrap;
   user-select: none;
-  min-height: 30px;
+  min-height: 26px;
   display: inline-flex;
   align-items: center;
   line-height: 1;
@@ -915,11 +915,11 @@ body::after {
     transition: transform 0.1s ease-out;
   }
 
-  /* 排序药丸：视觉上仍明显小于分类药丸，但放大到可点范围 */
+  /* 排序药丸：视觉上仍明显小于分类药丸，但保留可点范围；顶部栏已并成一行，这里压扁省高度 */
   .sort-pill {
-    min-height: 40px;
-    padding: 9px 15px;
-    font-size: 0.82rem;
+    min-height: 32px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
   }
 
   .sort-pill:active {

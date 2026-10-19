@@ -163,16 +163,16 @@ export default function MenuPage() {
       {/* ── 顶部栏 ── */}
       <header className="shrink-0 z-30 border-b"
         style={{ background: 'hsl(20 28% 5% / 0.92)', backdropFilter: 'blur(32px)', borderColor: 'rgba(200,150,100,0.08)' }}>
-        <div className="flex items-center gap-2 justify-between px-5 py-2 lg:px-8 lg:py-2.5 container-landscape">
+        <div className="flex items-center gap-2 justify-between px-5 py-1.5 lg:px-8 lg:py-2 container-landscape">
           <div className="flex items-center min-w-0 flex-1 mr-2">
             <div className="relative shrink-0">
-              <UtensilsCrossed className="w-6 h-6 text-primary" style={{ filter: 'drop-shadow(0 0 8px rgba(217,152,59,0.4))' }} />
+              <UtensilsCrossed className="w-5 h-5 text-primary" style={{ filter: 'drop-shadow(0 0 8px rgba(217,152,59,0.4))' }} />
             </div>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
             <button onClick={() => navigate('/lang')}
-              className="h-10 w-10 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground transition-colors shrink-0"
+              className="h-9 w-9 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground transition-colors shrink-0"
               style={{ background: 'rgba(234,215,178,0.05)', border: '1px solid rgba(234,215,178,0.12)' }}
               title="Language / 言語 / 언어">
               <Languages className="w-4 h-4" />
@@ -181,12 +181,12 @@ export default function MenuPage() {
             <Sheet open={cartOpen} onOpenChange={setCartOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost"
-                  className="relative h-12 px-5 gap-2.5 text-foreground btn-press"
+                  className="relative h-9 px-4 gap-2 text-foreground btn-press"
                   style={{ background: 'rgba(234,215,178,0.05)', border: '1px solid rgba(234,215,178,0.14)', borderRadius: '48px', backdropFilter: 'blur(20px)' }}>
-                  <ShoppingCart className="w-5 h-5 text-primary" />
-                  <span className="hidden md:inline text-base">{t.menu.cartTitle}</span>
+                  <ShoppingCart className="w-4 h-4 text-primary" />
+                  <span className="hidden md:inline text-sm">{t.menu.cartTitle}</span>
                   {totalCount > 0 && (
-                    <Badge className="absolute -top-2 -right-2 h-6 w-6 p-0 flex items-center justify-center text-xs bg-primary text-primary-foreground border-0 badge-bounce">
+                    <Badge className="absolute -top-1.5 -right-1.5 h-5 w-5 p-0 flex items-center justify-center text-[11px] bg-primary text-primary-foreground border-0 badge-bounce">
                       {totalCount > 99 ? '99+' : totalCount}
                     </Badge>
                   )}
@@ -273,42 +273,43 @@ export default function MenuPage() {
             </Sheet>
           </div>
         </div>
-        {/* 分类栏 */}
-        <div className="overflow-x-auto whitespace-nowrap px-5 lg:px-8">
-          <div className="inline-flex gap-2.5 pb-2.5">
-            <button onClick={() => setActiveCategory('all')} className={`option-pill ${activeCategory === 'all' ? 'active' : ''}`}>
-              {t.menu.all}
-            </button>
-            {visibleCategories.map(cat => (
-              <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
-                className={`option-pill ${activeCategory === cat.id ? 'active' : ''}`}>
-                {getLocalizedName(cat, lang)}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* 分类 + 排序：宽屏并成一行压缩高度；窄屏仍分两行，避免排序药丸挤掉分类 */}
+        <div className="px-5 pb-2 lg:px-8">
+          <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
+            <div className="min-w-0 overflow-x-auto whitespace-nowrap sm:flex-1">
+              <div className="inline-flex gap-2">
+                <button onClick={() => setActiveCategory('all')} className={`option-pill ${activeCategory === 'all' ? 'active' : ''}`}>
+                  {t.menu.all}
+                </button>
+                {visibleCategories.map(cat => (
+                  <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
+                    className={`option-pill ${activeCategory === cat.id ? 'active' : ''}`}>
+                    {getLocalizedName(cat, lang)}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        {/* 排序栏：分类下方的小号次级控件（默认＝后台配置的编号，其余按价格） */}
-        <div className="sort-row flex flex-wrap items-center gap-x-3 gap-y-1.5 px-5 pb-3 lg:px-8">
-          <span className="sort-label inline-flex shrink-0 items-center gap-1.5 text-xs tracking-wider text-muted-foreground/70">
-            <ArrowUpDown className="w-3.5 h-3.5" aria-hidden="true" />
-            {t.menu.sort.label}
-          </span>
-          <div className="flex items-center gap-1.5" role="group" aria-label={t.menu.sort.label}>
-            {SORT_KEYS.map(key => (
-              <button key={key} type="button"
-                aria-pressed={sortKey === key}
-                onClick={() => setSortKey(key)}
-                className={`sort-pill ${sortKey === key ? 'active' : ''}`}>
-                {t.menu.sort[key]}
-              </button>
-            ))}
+            <div className="sort-row flex shrink-0 items-center gap-1.5 self-end sm:self-auto" role="group" aria-label={t.menu.sort.label}>
+              <span className="sort-label hidden shrink-0 items-center gap-1.5 text-xs tracking-wider text-muted-foreground/70 lg:inline-flex">
+                <ArrowUpDown className="w-3 h-3" aria-hidden="true" />
+                {t.menu.sort.label}
+              </span>
+              {SORT_KEYS.map(key => (
+                <button key={key} type="button"
+                  aria-pressed={sortKey === key}
+                  onClick={() => setSortKey(key)}
+                  className={`sort-pill ${sortKey === key ? 'active' : ''}`}>
+                  {t.menu.sort[key]}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </header>
 
       {/* ── 商品网格 ── */}
-      <main className="landscape-scroll px-5 py-5 lg:px-8 lg:py-6 container-landscape">
+      <main className="landscape-scroll px-5 py-3 lg:px-8 lg:py-4 container-landscape">
         {sortedProducts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-3">
             <UtensilsCrossed className="w-12 h-12 opacity-20" />
