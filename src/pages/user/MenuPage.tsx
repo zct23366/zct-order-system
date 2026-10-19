@@ -61,11 +61,19 @@ export default function MenuPage() {
     }, 260);
   };
 
+  // 菜单页是整屏固定布局，body 全程锁死：页面不能被上下拖动。
+  // 一旦能拖动，移动端浏览器的地址栏/工具栏就会带着模糊和渐变压到页面顶部，
+  // 看起来像顶栏被糊住、被挡住。
   useEffect(() => {
-    if (detailProduct) { document.body.style.overflow = 'hidden'; }
-    else { document.body.style.overflow = ''; }
-    return () => { document.body.style.overflow = ''; };
-  }, [detailProduct]);
+    const html = document.documentElement;
+    const prevHtml = html.style.overflow;
+    html.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    return () => {
+      html.style.overflow = prevHtml;
+      document.body.style.overflow = '';
+    };
+  }, []);
 
   /** 计算选项附加价格小计 */
   const optionsExtra = options.reduce((s, o) => s + o.price * (optQty[o.id] ?? 0), 0);

@@ -148,6 +148,9 @@
     line-height: 1.55;
     letter-spacing: 0.01em;
     overflow-x: hidden;
+    /* 禁止整页纵向回弹/拖动：一拖动，移动端浏览器的地址栏就会带模糊渐变压到页面顶部，
+       看起来像顶栏被糊住。内容滚动一律交给 .landscape-scroll 内部 */
+    overscroll-behavior-y: none;
   }
 
   h1, h2, h3, h4, h5, h6 {
