@@ -369,24 +369,37 @@ export default function MenuPage() {
         </div>
       </main>
 
-      {/* ── 底部悬浮结算栏 ── */}
+      {/* ── 底部结算区 ──
+          不再用整条实底 + 边框（会糊住菜单），只保留两枚半透明控件；
+          底部预留 84px 给右下角的购物车胶囊，结算按钮自然落在它上方，互不重叠。 */}
       {totalCount > 0 && (
-        <div className="sticky bottom-0 shrink-0 px-5 py-3.5 lg:px-8"
-          style={{ background: 'hsl(20 28% 5% / 0.94)', backdropFilter: 'blur(32px)', borderTop: '1px solid rgba(200,150,100,0.08)', paddingBottom: 'calc(0.875rem + env(safe-area-inset-bottom))' }}>
-          <div className="flex items-center justify-between container-landscape gap-4">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <ShoppingCart className="w-6 h-6 text-primary" style={{ filter: 'drop-shadow(0 0 6px rgba(217,152,59,0.3))' }} />
-                <span className="absolute -top-2 -right-3 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium"
+        <div className="sticky bottom-0 shrink-0 px-5 lg:px-8"
+          style={{ paddingBottom: 'calc(84px + env(safe-area-inset-bottom))' }}>
+          <div className="flex items-center justify-between container-landscape gap-3 pb-2">
+            <div className="flex items-center gap-3 rounded-full pl-4 pr-5 py-2"
+              style={{
+                background: 'linear-gradient(to right, rgba(20,14,10,0.94) 0%, rgba(20,14,10,0.62) 62%, rgba(20,14,10,0.18) 100%)',
+                border: '1px solid rgba(234,215,178,0.10)',
+              }}>
+              <div className="relative shrink-0">
+                <ShoppingCart className="w-5 h-5 text-primary" style={{ filter: 'drop-shadow(0 0 6px rgba(217,152,59,0.3))' }} />
+                <span className="absolute -top-2 -right-2.5 bg-primary text-primary-foreground text-[11px] rounded-full w-5 h-5 flex items-center justify-center font-medium"
                   style={{ boxShadow: '0 0 8px rgba(217,152,59,0.2)' }}>
                   {totalCount}
                 </span>
               </div>
-              <span className="text-xl font-medium text-primary glow-number highlight-number">¥{totalAmount.toFixed(2)}</span>
+              <span className="text-lg font-medium text-primary glow-number highlight-number whitespace-nowrap">¥{totalAmount.toFixed(2)}</span>
             </div>
-            <Button className="btn-primary-neon flex-1 max-w-xs h-12 text-base font-medium" onClick={handleCheckout}>
+
+            <button type="button" onClick={handleCheckout}
+              className="btn-press shrink-0 h-12 px-9 rounded-full text-base font-medium whitespace-nowrap"
+              style={{
+                background: 'rgba(217,152,59,0.72)',
+                border: '1px solid rgba(245,190,100,0.55)',
+                color: 'hsl(24 40% 9%)',
+              }}>
               {t.menu.checkout}
-            </Button>
+            </button>
           </div>
         </div>
       )}
@@ -397,11 +410,11 @@ export default function MenuPage() {
       <div
         className="pointer-events-none fixed right-0 z-20 flex items-end justify-end"
         style={{
-          bottom: totalCount > 0 ? '84px' : '0px',
+          bottom: '0px',
           height: '76px',
           width: 'min(46vw, 360px)',
-          padding: '0 16px 14px 0',
-          background: 'linear-gradient(to left, rgba(18,13,8,0.88) 0%, rgba(18,13,8,0.42) 48%, rgba(18,13,8,0) 100%)',
+          padding: '0 16px calc(14px + env(safe-area-inset-bottom)) 0',
+          background: 'linear-gradient(to left, rgba(16,11,7,0.97) 0%, rgba(16,11,7,0.72) 48%, rgba(16,11,7,0.06) 100%)',
           borderTopLeftRadius: '20px',
         }}>
         <button
@@ -410,8 +423,8 @@ export default function MenuPage() {
           aria-label={t.menu.cartTitle}
           className="pointer-events-auto btn-press flex items-center gap-2 rounded-full pl-3.5 pr-4 h-11 text-foreground"
           style={{
-            background: 'rgba(234,215,178,0.10)',
-            border: '1px solid rgba(234,215,178,0.22)',
+            background: 'rgba(52,38,22,0.94)',
+            border: '1px solid rgba(234,215,178,0.34)',
             boxShadow: '0 6px 20px rgba(0,0,0,0.45)',
           }}>
           <ShoppingCart className="w-4 h-4 text-primary" style={{ filter: 'drop-shadow(0 0 6px rgba(217,152,59,0.35))' }} />
