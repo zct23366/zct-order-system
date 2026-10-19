@@ -184,13 +184,44 @@ export default function MenuPage() {
 
   // 顾客端只显示可见分类；「全部」栏也只列属于可见分类的商品（隐藏分类＝停售归档）
   const visibleCategories = useMemo(() => categories.filter(c => c.is_visible !== false), [categories]);
-  const filtered = useMemo(() => {
-    if (activeCategory === 'all') {
-      const visibleCategoryIds = new Set(visibleCategories.map(c => c.id));
-      return products.filter(p => getProductCategoryIds(p).some(cid => visibleCategoryIds.has(cid)));
+
+  /** 名称归一：去掉括号后缀与「·」「｜」之后的部分，用来判断两个菜是不是「特别相似」 */
+  const similarityKey = (name: string) =>
+    name.replace(/[（(][^）)]*[)）]/g, '').split('·')[0].split('｜')[0].trim();
+
+  /**
+   * 「全部」栏的展示顺序：按分类轮转交错，保证首屏每个分类都能露脸；
+   * 同一分类里名字相近的（阿芙加朵 香草/抹茶、抹茶拿铁/冰、哈根达斯 香草/绿茶）合成一组连排。
+   */
+  const interleavedAll = useMemo(() => {
+    const catOrder = visibleCategories.map(c => c.id);
+    const buckets = new Map<string, Product[][]>(catOrder.map(id => [id, []]));
+
+    for (const p of products) {
+      const cid = getProductCategoryIds(p).find(id => buckets.has(id)) ?? p.category_id;
+      const bucket = buckets.get(cid);
+      if (!bucket) continue;
+      const key = similarityKey(p.name);
+      const last = bucket[bucket.length - 1];
+      if (last && similarityKey(last[0].name) === key) last.push(p);
+      else bucket.push([p]);
     }
+
+    const out: Product[] = [];
+    const rounds = Math.max(0, ...[...buckets.values()].map(b => b.length));
+    for (let round = 0; round < rounds; round++) {
+      for (const cid of catOrder) {
+        const unit = buckets.get(cid)?.[round];
+        if (unit) out.push(...unit);
+      }
+    }
+    return out;
+  }, [products, visibleCategories]);
+
+  const filtered = useMemo(() => {
+    if (activeCategory === 'all') return interleavedAll;
     return products.filter(p => productInCategory(p, activeCategory));
-  }, [activeCategory, products, visibleCategories]);
+  }, [activeCategory, products, interleavedAll]);
 
   // 排序：默认沿用接口顺序（分类 + 后台配置的编号）；价格排序以编号作为同价时的稳定次序
   const sortedProducts = useMemo(() => {
