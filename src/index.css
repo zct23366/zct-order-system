@@ -677,6 +677,12 @@ body::after {
 /* ═══════════════════════════════════════
    ↕️ 排序药丸——分类下方的次级小控件
    ═══════════════════════════════════════ */
+/* 分类条右端渐隐：滚动的药丸滚到排序控件下方时淡出，而不是被裁出一条硬边 */
+.category-fade {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 72px), transparent 100%);
+  mask-image: linear-gradient(to right, #000 calc(100% - 72px), transparent 100%);
+}
+
 .sort-pill {
   background: rgba(234,215,178,0.04);
   border: 1px solid rgba(200,150,100,0.12);
