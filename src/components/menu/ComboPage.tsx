@@ -237,23 +237,36 @@ export default function ComboPage({ product, groups, options, text, lang, onClos
           )}
         </div>
 
-        {/* ── 底部操作 ── */}
+        {/* ── 底部操作：没选完不出现「加入购物车」，只提示还差几项 ── */}
         <div className="shrink-0 px-4 pt-2 pb-4 lg:px-8 flex items-center gap-3">
           <button onClick={() => { setStep(0); setAnimKey(k => k + 1); }}
             className="btn-press shrink-0 h-12 px-5 rounded-full text-sm text-muted-foreground"
             style={{ background: 'rgba(234,215,178,0.04)', border: '1px solid rgba(200,150,100,0.12)' }}>
             {text.reselect}
           </button>
-          <button onClick={confirm} disabled={!allPicked}
-            className="btn-press flex-1 h-12 rounded-full text-base font-medium transition-opacity"
-            style={{
-              background: allPicked ? 'rgba(217,152,59,0.92)' : 'rgba(217,152,59,0.22)',
-              border: '1px solid rgba(245,190,100,0.55)',
-              color: allPicked ? 'hsl(24 40% 9%)' : 'rgba(245,190,100,0.55)',
-              cursor: allPicked ? 'pointer' : 'not-allowed',
-            }}>
-            {text.add}
-          </button>
+
+          {allPicked ? (
+            <button onClick={confirm}
+              className="btn-press flex-1 h-12 rounded-full text-base font-medium"
+              style={{
+                background: 'rgba(217,152,59,0.92)',
+                border: '1px solid rgba(245,190,100,0.55)',
+                color: 'hsl(24 40% 9%)',
+              }}>
+              {text.add}
+            </button>
+          ) : (
+            <div aria-disabled="true"
+              className="flex-1 h-12 rounded-full flex items-center justify-center text-sm"
+              style={{
+                background: 'rgba(234,215,178,0.04)',
+                border: '1px dashed rgba(200,150,100,0.16)',
+                color: 'hsl(var(--muted-foreground))',
+                cursor: 'not-allowed',
+              }}>
+              {text.remaining.replace('{n}', String(groups.filter(g => !picks[g.id]).length))}
+            </div>
+          )}
         </div>
       </div>
     </div>

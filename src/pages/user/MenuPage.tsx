@@ -54,6 +54,8 @@ export default function MenuPage() {
   }, []);
 
   /** 该商品配置了套餐分组就进套餐二级页，否则走普通详情弹层 */
+  const comboProductIds = useMemo(() => new Set(comboGroups.map(g => g.product_id)), [comboGroups]);
+
   const openProduct = (product: Product) => {
     const hasCombo = comboGroups.some(g => g.product_id === product.id);
     if (hasCombo) {
@@ -390,7 +392,12 @@ export default function MenuPage() {
                     )}
                     <div className="flex items-center justify-between mt-auto pt-2.5">
                       <span className="text-primary font-medium text-lg lg:text-xl highlight-number">¥{product.price.toFixed(2)}</span>
-                      {qty === 0 ? (
+                      {comboProductIds.has(product.id) ? (
+                        <Button size="sm" className="h-10 px-5 text-sm lg:h-11 lg:px-6 lg:text-base btn-primary-neon font-medium btn-press" style={{ borderRadius: '32px' }}
+                          onClick={(e) => { e.stopPropagation(); openProduct(product); }}>
+                          <Plus className="w-3.5 h-3.5 mr-1.5" />{comboTextOf(lang).select}
+                        </Button>
+                      ) : qty === 0 ? (
                         <Button size="sm" className="h-10 px-5 text-sm lg:h-11 lg:px-6 lg:text-base btn-primary-neon font-medium btn-press" style={{ borderRadius: '32px' }}
                           onClick={(e) => { e.stopPropagation(); handleAddToCart(product); }}>
                           <Plus className="w-3.5 h-3.5 mr-1.5" />{t.menu.addToCart}
