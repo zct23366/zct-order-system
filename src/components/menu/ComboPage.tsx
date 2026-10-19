@@ -15,11 +15,13 @@ interface ComboPageProps {
   onConfirm: (picked: ComboOption[]) => void;
 }
 
-/** 价格加减的显示文本：0 显示「已含」，正数 +¥x，负数 −¥x */
-function deltaLabel(delta: number, text: ComboText): string {
-  if (!delta) return text.included;
-  const sign = delta > 0 ? '+' : '−';
-  return `${sign}¥${Math.abs(delta).toFixed(0)}`;
+/**
+ * 价格标签：每组第一个选项（定价基准）显示「已含」，
+ * 其余一律显示 +¥N——同价或更便宜的也显示 +¥0，不再统统写成「已含」。
+ */
+function deltaLabel(delta: number, isAnchor: boolean, text: ComboText): string {
+  if (isAnchor) return text.included;
+  return `+¥${delta.toFixed(0)}`;
 }
 
 /**
@@ -43,6 +45,16 @@ export default function ComboPage({ product, groups, options, text, lang, onClos
     [current, options],
   );
   const allPicked = groups.every(g => !!picks[g.id]);
+
+  /** 每组第一个选项是定价基准，显示「已含」；其余显示 +¥N（含 +¥0） */
+  const anchorIdOf = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const g of groups) {
+      const first = options.filter(o => o.group_id === g.id).sort((a, b) => a.sort_order - b.sort_order)[0];
+      if (first) map.set(g.id, first.id);
+    }
+    return map;
+  }, [groups, options]);
 
   // 回到这一步时清掉该组之后的选择，避免出现「已选但看不到」的错位
   useEffect(() => {
@@ -185,7 +197,7 @@ export default function ComboPage({ product, groups, options, text, lang, onClos
                         </p>
                         <span className="text-xs font-medium"
                           style={{ color: option.price_delta === 0 ? 'hsl(var(--muted-foreground))' : 'hsl(var(--primary))' }}>
-                          {deltaLabel(option.price_delta, text)}
+                          {deltaLabel(option.price_delta, anchorIdOf.get(current.id) === option.id, text)}
                         </span>
                       </div>
                       {selected && (
@@ -217,7 +229,7 @@ export default function ComboPage({ product, groups, options, text, lang, onClos
                   </div>
                   <span className="text-xs shrink-0"
                     style={{ color: option.price_delta === 0 ? 'hsl(var(--muted-foreground))' : 'hsl(var(--primary))' }}>
-                    {deltaLabel(option.price_delta, text)}
+                    {deltaLabel(option.price_delta, anchorIdOf.get(group.id) === option.id, text)}
                   </span>
                 </div>
               ))}
