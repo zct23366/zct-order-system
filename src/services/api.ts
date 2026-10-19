@@ -14,6 +14,52 @@ import type {
   ComboOption,
 } from '@/types/types';
 
+// ─── 实时汇率（日元 → 人民币） ─────────────────────────────
+let fxCache: { rate: number; at: number } | null = null;
+const FX_TTL_MS = 60 * 60 * 1000;
+const FX_STORE_KEY = 'jpy_cny_rate';
+
+/**
+ * 抓取「1 日元 = 多少人民币」的实时汇率，内存缓存 1 小时。
+ * 依次尝试两个免密钥的公开接口；都失败时回退到上一次成功缓存的汇率（7 天内）。
+ * @returns 汇率（如 0.048），完全拿不到时为 null
+ */
+export async function fetchJpyToCnyRate(): Promise<number | null> {
+  if (fxCache && Date.now() - fxCache.at < FX_TTL_MS) return fxCache.rate;
+
+  const remember = (rate: number) => {
+    fxCache = { rate, at: Date.now() };
+    try { localStorage.setItem(FX_STORE_KEY, JSON.stringify(fxCache)); } catch { /* 隐私模式忽略 */ }
+    return rate;
+  };
+
+  const sources: Array<{ url: string; pick: (j: unknown) => unknown }> = [
+    { url: 'https://open.er-api.com/v6/latest/JPY', pick: j => (j as { rates?: { CNY?: number } })?.rates?.CNY },
+    { url: 'https://api.frankfurter.app/latest?from=JPY&to=CNY', pick: j => (j as { rates?: { CNY?: number } })?.rates?.CNY },
+  ];
+
+  for (const src of sources) {
+    try {
+      const res = await fetch(src.url, { cache: 'no-store' });
+      if (!res.ok) continue;
+      const rate = Number(src.pick(await res.json()));
+      // 日元兑人民币永远小于 1，落在这个区间才算拿到真汇率
+      if (Number.isFinite(rate) && rate > 0 && rate < 1) return remember(rate);
+    } catch {
+      // 该源不可用，换下一个
+    }
+  }
+
+  // 都失败：用本地记着的上一次汇率（7 天内），总比拍脑袋的数字靠谱
+  try {
+    const saved = JSON.parse(localStorage.getItem(FX_STORE_KEY) ?? 'null') as { rate?: number; at?: number } | null;
+    if (saved?.rate && saved.at && Date.now() - saved.at < 7 * 24 * 3600 * 1000) return saved.rate;
+  } catch {
+    // 存储不可用则放弃
+  }
+  return null;
+}
+
 // ─── 套餐组合 ─────────────────────────────────────────────
 /**
  * 拉取全部套餐分组与选项（选项内嵌商品，用于取名称与图片）。

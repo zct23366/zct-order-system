@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useCart } from '@/contexts/CartContext';
 import { usePaymentConfig } from '@/hooks/useData';
-import { createOrder } from '@/services/api';
-import type { PaymentMethod, Order } from '@/types/types';
+import { createOrder, fetchJpyToCnyRate } from '@/services/api';
+import type { PaymentMethod, Order, PaymentConfig } from '@/types/types';
 
 /** 只取订单号末4位，用于大字展示 */
 function shortNum(n: string) { return n.slice(-4); }
@@ -129,6 +129,31 @@ export default function PaymentPage() {
   const [submitting, setSubmitting] = useState(false);
   const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null);
 
+  // 微信 / 支付宝按人民币收款：实时抓日元→人民币汇率（1 小时缓存），往上取整
+  const isCnyPayment = paymentMethod === 'wechat' || paymentMethod === 'alipay';
+  const [cnyRate, setCnyRate] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!isCnyPayment) return;
+    let alive = true;
+    fetchJpyToCnyRate()
+      .then(rate => {
+        if (!alive) return;
+        if (rate) {
+          setCnyRate(rate);
+          return;
+        }
+        // 在线汇率拿不到时用配置里的值兜底；配置值量纲不对（如 4.3）就退回 0.05
+        const key = `${paymentMethod}_rate` as keyof PaymentConfig;
+        const fallback = Number(config?.[key] ?? 0);
+        setCnyRate(fallback > 0 && fallback < 1 ? fallback : 0.05);
+      })
+      .catch(() => { /* 兜底同上，保持页面可用 */ });
+    return () => { alive = false; };
+  }, [isCnyPayment, paymentMethod, config]);
+
+  const cnyAmount = cnyRate ? Math.ceil(totalAmount * cnyRate) : null;
+
   useEffect(() => {
     if (confirmedOrder) return; // 已提交成功，不再守卫跳转
     if (!paymentMethod || items.length === 0) {
@@ -191,27 +216,27 @@ export default function PaymentPage() {
           <p className="text-base text-muted-foreground mt-1.5">{methodLabel}</p>
         </div>
 
-        {/* 金额 */}
+        {/* 金额：微信/支付宝显示人民币（大字）+ 日元（小字），其余显示日元 */}
         <div className="glass-card rounded-2xl p-8 text-center">
           <p className="text-sm text-muted-foreground mb-2 tracking-widest" style={{ letterSpacing: '0.12em' }}>
             {t.payment.amount}
           </p>
-          <p className="text-4xl md:text-6xl font-medium text-primary glow-number highlight-number tracking-tight">
-            ¥{totalAmount.toFixed(2)}
-          </p>
-          {/* 汇率换算金额 */}
-          {(() => {
-            if (!config || !paymentMethod) return null;
-            const rateKey = `${paymentMethod}_rate` as keyof typeof config;
-            const rate = Number(config[rateKey] ?? 1);
-            if (Math.abs(rate - 1) < 0.0001) return null;
-            const converted = totalAmount * rate;
-            return (
-              <p className="text-base text-muted-foreground mt-2">
-                {t.payment.convertedAmount ?? '≈'} {converted.toFixed(0)} {t.payment.convertedUnit ?? ''}
+          {isCnyPayment && cnyAmount !== null ? (
+            <>
+              <p className="text-4xl md:text-6xl font-medium text-primary glow-number highlight-number tracking-tight">
+                ¥{cnyAmount}
+                <span className="text-base md:text-xl text-muted-foreground font-normal ml-2 align-middle">CNY</span>
               </p>
-            );
-          })()}
+              <p className="text-sm md:text-base text-muted-foreground mt-3">
+                ≈ ¥{totalAmount.toFixed(0)} <span className="opacity-70">JPY</span>
+              </p>
+            </>
+          ) : (
+            <p className="text-4xl md:text-6xl font-medium text-primary glow-number highlight-number tracking-tight">
+              ¥{totalAmount.toFixed(2)}
+              <span className="text-base md:text-xl text-muted-foreground font-normal ml-2 align-middle">JPY</span>
+            </p>
+          )}
         </div>
 
         {/* 二维码 / 现金 */}
