@@ -17,24 +17,27 @@
         var FIT_WIDTH = Math.round(DESIGN_WIDTH / ZOOM); // 1067：放大 1.2 倍后能放下 1280 画面的宽度
         var meta = document.querySelector('meta[name="viewport"]');
 
-        // 屏幕短边/长边换算成当前朝向的宽度。
-        // 不要用 window.innerWidth：写下 width= 之后它就是版面宽度，
-        // 再拿它算比例会自我放大，一次 resize 就锁成 scale=1、内容溢出屏幕。
-        function deviceWidth() {
-          var w = screen.width || window.innerWidth;
-          var h = screen.height || window.innerHeight;
-          var landscape = window.matchMedia
-            ? window.matchMedia('(orientation: landscape)').matches
-            : w > h;
-          return landscape ? Math.max(w, h) : Math.min(w, h);
+        // 真实视口尺寸：脚本执行时 meta 还是 device-width，此刻读到的就是设备的 CSS 像素尺寸。
+        // 不要用 screen.width —— 部分 iPad / 安卓平板返回的是物理像素（例如 1546 而不是 880），
+        // 比例会被算成 1.2 以上、夹在上限，版面溢出屏幕、右侧内容被切掉。只取一次，之后换向直接交换。
+        var devW = 0, devH = 0, primed = false;
+
+        function primeDeviceSize() {
+          if (primed) return;
+          var w = document.documentElement.clientWidth || window.innerWidth;
+          var h = document.documentElement.clientHeight || window.innerHeight;
+          if (!w || !h) return;                        // 解析阶段偶发取不到，等下一次
+          devW = w; devH = h; primed = true;
         }
 
         function applyScale() {
-          var shortSide = Math.min(screen.width || 0, screen.height || 0);
+          primeDeviceSize();
+          if (!primed) return;
+          var shortSide = Math.min(devW, devH);
 
           if (shortSide >= 768 && shortSide < DESIGN_WIDTH) {
-            // 平板：按 FIT_WIDTH 排版，放大到 120% 后铺满屏幕
-            var scale = Math.min(deviceWidth() / FIT_WIDTH, ZOOM).toFixed(4);
+            // 平板：按 FIT_WIDTH 排版，放大到 120% 后正好铺满屏幕
+            var scale = Math.min(devW / FIT_WIDTH, ZOOM).toFixed(4);
             meta.setAttribute(
               'content',
               'width=' + FIT_WIDTH +
@@ -54,7 +57,10 @@
 
         applyScale();
         window.addEventListener('resize', function () { setTimeout(applyScale, 50); });
-        window.addEventListener('orientationchange', function () { setTimeout(applyScale, 120); });
+        window.addEventListener('orientationchange', function () {
+          var t = devW; devW = devH; devH = t;         // 换向：长宽互换，不重新测量
+          setTimeout(applyScale, 120);
+        });
       })();
     </script>
   </head>

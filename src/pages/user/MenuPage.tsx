@@ -2,8 +2,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingCart, Plus, Minus, Trash2, UtensilsCrossed, Phone, Sparkles, X, Zap, Languages, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { toast } from 'sonner';
 import { useCart } from '@/contexts/CartContext';
 import { useMenu } from '@/hooks/useData';
@@ -163,35 +162,52 @@ export default function MenuPage() {
       {/* ── 顶部栏 ── */}
       <header className="shrink-0 z-30 border-b"
         style={{ background: 'hsl(20 28% 5% / 0.92)', backdropFilter: 'blur(32px)', borderColor: 'rgba(200,150,100,0.08)' }}>
-        <div className="flex items-center gap-2 justify-between px-5 py-1.5 lg:px-8 lg:py-2 container-landscape">
-          <div className="flex items-center min-w-0 flex-1 mr-2">
-            <div className="relative shrink-0">
-              <UtensilsCrossed className="w-5 h-5 text-primary" style={{ filter: 'drop-shadow(0 0 8px rgba(217,152,59,0.4))' }} />
+        {/* 单行顶部：分类 + 排序 + 语言（购物车已移到右下角角标），整块只占一行高度 */}
+        <div className="px-5 py-2 lg:px-8">
+          <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
+            <div className="min-w-0 overflow-x-auto whitespace-nowrap sm:flex-1">
+              <div className="inline-flex gap-2">
+                <button onClick={() => setActiveCategory('all')} className={`option-pill ${activeCategory === 'all' ? 'active' : ''}`}>
+                  {t.menu.all}
+                </button>
+                {visibleCategories.map(cat => (
+                  <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
+                    className={`option-pill ${activeCategory === cat.id ? 'active' : ''}`}>
+                    {getLocalizedName(cat, lang)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-1.5 self-end sm:self-auto">
+              <div className="sort-row flex items-center gap-1.5" role="group" aria-label={t.menu.sort.label}>
+                <span className="sort-label hidden shrink-0 items-center gap-1.5 text-xs tracking-wider text-muted-foreground/70 lg:inline-flex">
+                  <ArrowUpDown className="w-3 h-3" aria-hidden="true" />
+                  {t.menu.sort.label}
+                </span>
+                {SORT_KEYS.map(key => (
+                  <button key={key} type="button"
+                    aria-pressed={sortKey === key}
+                    onClick={() => setSortKey(key)}
+                    className={`sort-pill ${sortKey === key ? 'active' : ''}`}>
+                    {t.menu.sort[key]}
+                  </button>
+                ))}
+              </div>
+
+              <button onClick={() => navigate('/lang')}
+                className="ml-1 h-8 w-8 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                style={{ background: 'rgba(234,215,178,0.05)', border: '1px solid rgba(234,215,178,0.12)' }}
+                title="Language / 言語 / 언어">
+                <Languages className="w-4 h-4" />
+              </button>
             </div>
           </div>
+        </div>
+      </header>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <button onClick={() => navigate('/lang')}
-              className="h-9 w-9 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground transition-colors shrink-0"
-              style={{ background: 'rgba(234,215,178,0.05)', border: '1px solid rgba(234,215,178,0.12)' }}
-              title="Language / 言語 / 언어">
-              <Languages className="w-4 h-4" />
-            </button>
-
-            <Sheet open={cartOpen} onOpenChange={setCartOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost"
-                  className="relative h-9 px-4 gap-2 text-foreground btn-press"
-                  style={{ background: 'rgba(234,215,178,0.05)', border: '1px solid rgba(234,215,178,0.14)', borderRadius: '48px', backdropFilter: 'blur(20px)' }}>
-                  <ShoppingCart className="w-4 h-4 text-primary" />
-                  <span className="hidden md:inline text-sm">{t.menu.cartTitle}</span>
-                  {totalCount > 0 && (
-                    <Badge className="absolute -top-1.5 -right-1.5 h-5 w-5 p-0 flex items-center justify-center text-[11px] bg-primary text-primary-foreground border-0 badge-bounce">
-                      {totalCount > 99 ? '99+' : totalCount}
-                    </Badge>
-                  )}
-                </Button>
-              </SheetTrigger>
+      {/* 购物车抽屉：入口按钮已改为右下角穿透角标，这里保留内容结构，后续接回入口即可复用 */}
+      <Sheet open={cartOpen} onOpenChange={setCartOpen}>
               <SheetContent side="right" className="w-full max-w-md flex flex-col"
                 style={{ background: 'hsl(20 26% 7%)', borderLeft: '1px solid rgba(200,150,100,0.08)', backdropFilter: 'blur(40px)' }}>
                 <SheetHeader>
@@ -269,44 +285,8 @@ export default function MenuPage() {
                     </div>
                   </div>
                 )}
-              </SheetContent>
-            </Sheet>
-          </div>
-        </div>
-        {/* 分类 + 排序：宽屏并成一行压缩高度；窄屏仍分两行，避免排序药丸挤掉分类 */}
-        <div className="px-5 pb-2 lg:px-8">
-          <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
-            <div className="min-w-0 overflow-x-auto whitespace-nowrap sm:flex-1">
-              <div className="inline-flex gap-2">
-                <button onClick={() => setActiveCategory('all')} className={`option-pill ${activeCategory === 'all' ? 'active' : ''}`}>
-                  {t.menu.all}
-                </button>
-                {visibleCategories.map(cat => (
-                  <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
-                    className={`option-pill ${activeCategory === cat.id ? 'active' : ''}`}>
-                    {getLocalizedName(cat, lang)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="sort-row flex shrink-0 items-center gap-1.5 self-end sm:self-auto" role="group" aria-label={t.menu.sort.label}>
-              <span className="sort-label hidden shrink-0 items-center gap-1.5 text-xs tracking-wider text-muted-foreground/70 lg:inline-flex">
-                <ArrowUpDown className="w-3 h-3" aria-hidden="true" />
-                {t.menu.sort.label}
-              </span>
-              {SORT_KEYS.map(key => (
-                <button key={key} type="button"
-                  aria-pressed={sortKey === key}
-                  onClick={() => setSortKey(key)}
-                  className={`sort-pill ${sortKey === key ? 'active' : ''}`}>
-                  {t.menu.sort[key]}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </header>
+        </SheetContent>
+      </Sheet>
 
       {/* ── 商品网格 ── */}
       <main className="landscape-scroll px-5 py-3 lg:px-8 lg:py-4 container-landscape">
@@ -410,6 +390,27 @@ export default function MenuPage() {
           </div>
         </div>
       )}
+
+      {/* ── 右下角购物车角标 ──
+          纯指示层：pointer-events 全穿透，滚动/拖动/点击都落到下面的菜单，
+          本身不可拖动、不接收任何手势。 */}
+      <div aria-hidden="true"
+        className="pointer-events-none select-none fixed right-0 z-20 flex items-center justify-end gap-2.5 pr-6"
+        style={{
+          bottom: totalCount > 0 ? '80px' : '0px',
+          height: '56px',
+          width: 'min(44vw, 340px)',
+          background: 'linear-gradient(to left, rgba(18,13,8,0.90) 0%, rgba(18,13,8,0.62) 45%, rgba(18,13,8,0) 100%)',
+          borderTopLeftRadius: '22px',
+        }}>
+        <ShoppingCart className="w-5 h-5 text-primary" style={{ filter: 'drop-shadow(0 0 6px rgba(217,152,59,0.35))' }} />
+        <span className="text-sm tracking-wide text-foreground/85">{t.menu.cartTitle}</span>
+        {totalCount > 0 && (
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-medium text-primary-foreground">
+            {totalCount > 99 ? '99+' : totalCount}
+          </span>
+        )}
+      </div>
 
       {/* ── 商品详情弹窗 ── */}
       {detailProduct && (
