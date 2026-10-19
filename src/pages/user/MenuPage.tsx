@@ -185,35 +185,17 @@ export default function MenuPage() {
   // 顾客端只显示可见分类；「全部」栏也只列属于可见分类的商品（隐藏分类＝停售归档）
   const visibleCategories = useMemo(() => categories.filter(c => c.is_visible !== false), [categories]);
 
-  /** 名称归一：去掉括号后缀与「·」「｜」之后的部分，用来判断两个菜是不是「特别相似」 */
-  const similarityKey = (name: string) =>
-    name.replace(/[（(][^）)]*[)）]/g, '').split('·')[0].split('｜')[0].trim();
-
   /**
-   * 「全部」栏的展示顺序：按分类轮转交错，保证首屏每个分类都能露脸；
-   * 同一分类里名字相近的（阿芙加朵 香草/抹茶、抹茶拿铁/冰、哈根达斯 香草/绿茶）合成一组连排。
+   * 「全部」栏的展示顺序：按分类成块排列，分类顺序取后台 sort_order
+   * （组合 → 咖啡 → 茶饮 → 甜点 → 手冲咖啡 → 其他），块内沿用各菜品的 sort_order。
    */
   const interleavedAll = useMemo(() => {
-    const catOrder = visibleCategories.map(c => c.id);
-    const buckets = new Map<string, Product[][]>(catOrder.map(id => [id, []]));
-
-    for (const p of products) {
-      const cid = getProductCategoryIds(p).find(id => buckets.has(id)) ?? p.category_id;
-      const bucket = buckets.get(cid);
-      if (!bucket) continue;
-      const key = similarityKey(p.name);
-      const last = bucket[bucket.length - 1];
-      if (last && similarityKey(last[0].name) === key) last.push(p);
-      else bucket.push([p]);
-    }
-
     const out: Product[] = [];
-    const rounds = Math.max(0, ...[...buckets.values()].map(b => b.length));
-    for (let round = 0; round < rounds; round++) {
-      for (const cid of catOrder) {
-        const unit = buckets.get(cid)?.[round];
-        if (unit) out.push(...unit);
-      }
+    for (const c of visibleCategories) {
+      const items = products
+        .filter(p => getProductCategoryIds(p).includes(c.id))
+        .sort((a, b) => a.sort_order - b.sort_order);
+      for (const p of items) if (!out.includes(p)) out.push(p);
     }
     return out;
   }, [products, visibleCategories]);
