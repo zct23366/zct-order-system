@@ -233,6 +233,20 @@ export async function createOrder(
   if (orderError) throw orderError;
   if (!orderData) throw new Error('创建订单失败');
 
+  // 先确定哪些 option_id 是真实的自定义选项（order_item_options.option_id 有外键指向
+  // product_options；套餐选项来自 combo_options，写进去会 409）
+  const cartOptionIds = [...new Set(
+    cartItems.flatMap(ci => ci.selectedOptions.map(o => o.option_id)).filter(Boolean)
+  )];
+  let validOptionIds = new Set<string>();
+  if (cartOptionIds.length > 0) {
+    const { data: optRows } = await supabase
+      .from('product_options')
+      .select('id')
+      .in('id', cartOptionIds);
+    validOptionIds = new Set((Array.isArray(optRows) ? optRows : []).map(r => r.id as string));
+  }
+
   // 逐条插入 order_items，并收集 ID 用于写入选项快照
   for (const ci of cartItems) {
     const optionsSubtotal = ci.selectedOptions.reduce(
@@ -258,7 +272,10 @@ export async function createOrder(
     if (ci.selectedOptions.length > 0) {
       const optRows = ci.selectedOptions.map(o => ({
         order_item_id: itemData.id,
-        option_id: o.option_id,
+        // option_id 上有外键指向 product_options：套餐选项的 id 来自 combo_options，
+        // 直接写会 409 导致下单失败，这里只保留真实的自定义选项 id，其余写 null
+        // （option_name 快照照常保留，出餐与打印不受影响）
+        option_id: validOptionIds.has(o.option_id) ? o.option_id : null,
         option_name: o.name_snapshot,
         quantity: o.quantity,
         unit_price: o.unit_price,
