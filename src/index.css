@@ -864,14 +864,14 @@ body::after {
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
   .touch-grid {
     grid-template-columns: repeat(4, 1fr);
     gap: 1.25rem;
   }
 }
 
-@media (min-width: 1440px) {
+@media (min-width: 1600px) {
   .touch-grid {
     grid-template-columns: repeat(5, 1fr);
     gap: 1.5rem;

@@ -325,30 +325,30 @@ export default function MenuPage() {
                       </div>
                     )}
                   </div>
-                  <div className="p-4 flex flex-col gap-1.5 flex-1 relative z-10">
-                    <p className="text-base font-medium text-foreground text-balance line-clamp-2 leading-snug"
+                  <div className="p-4 lg:p-5 flex flex-col gap-1.5 flex-1 relative z-10">
+                    <p className="text-base lg:text-lg font-medium text-foreground text-balance line-clamp-2 leading-snug"
                       style={{ fontFamily: "'Noto Serif SC','STSong',serif", letterSpacing: '0.04em' }}>
                       {getLocalizedName(product, lang)}
                     </p>
                     {getLocalizedDesc(product, lang) && (
-                      <p className="text-sm text-muted-foreground line-clamp-1 leading-relaxed">{getLocalizedDesc(product, lang)}</p>
+                      <p className="text-sm lg:text-[0.95rem] text-muted-foreground line-clamp-1 leading-relaxed">{getLocalizedDesc(product, lang)}</p>
                     )}
                     <div className="flex items-center justify-between mt-auto pt-2.5">
-                      <span className="text-primary font-medium text-lg highlight-number">¥{product.price.toFixed(2)}</span>
+                      <span className="text-primary font-medium text-lg lg:text-xl highlight-number">¥{product.price.toFixed(2)}</span>
                       {qty === 0 ? (
-                        <Button size="sm" className="h-10 px-5 text-sm btn-primary-neon font-medium btn-press" style={{ borderRadius: '32px' }}
+                        <Button size="sm" className="h-10 px-5 text-sm lg:h-11 lg:px-6 lg:text-base btn-primary-neon font-medium btn-press" style={{ borderRadius: '32px' }}
                           onClick={(e) => { e.stopPropagation(); handleAddToCart(product); }}>
                           <Plus className="w-3.5 h-3.5 mr-1.5" />{t.menu.addToCart}
                         </Button>
                       ) : (
                         <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 btn-press"
+                          <Button variant="ghost" size="icon" className="h-9 w-9 lg:h-10 lg:w-10 shrink-0 btn-press"
                             style={{ border: '1px solid rgba(200,150,100,0.12)', borderRadius: '10px' }}
                             onClick={() => updateQuantity(product.id, qty - 1)}>
                             <Minus className="w-3.5 h-3.5" />
                           </Button>
-                          <span className="text-base w-7 text-center font-medium text-foreground">{qty}</span>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 btn-press"
+                          <span className="text-base lg:text-lg w-7 lg:w-8 text-center font-medium text-foreground">{qty}</span>
+                          <Button variant="ghost" size="icon" className="h-9 w-9 lg:h-10 lg:w-10 shrink-0 btn-press"
                             style={{ border: '1px solid rgba(200,150,100,0.12)', borderRadius: '10px' }}
                             onClick={() => handleAddToCart(product)}>
                             <Plus className="w-3.5 h-3.5" />
