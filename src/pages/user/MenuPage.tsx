@@ -161,7 +161,7 @@ export default function MenuPage() {
     <div className="landscape-container page-enter">
       {/* ── 顶部栏 ── */}
       <header className="shrink-0 z-30 border-b"
-        style={{ background: 'hsl(20 28% 5% / 0.92)', backdropFilter: 'blur(32px)', borderColor: 'rgba(200,150,100,0.08)' }}>
+        style={{ background: 'hsl(20 28% 6%)', borderColor: 'rgba(200,150,100,0.08)' }}>
         {/* 单行顶部：分类 + 排序 + 语言（购物车已移到右下角角标），整块只占一行高度 */}
         <div className="px-5 py-2 lg:px-8">
           <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
@@ -391,25 +391,37 @@ export default function MenuPage() {
         </div>
       )}
 
-      {/* ── 右下角购物车角标 ──
-          纯指示层：pointer-events 全穿透，滚动/拖动/点击都落到下面的菜单，
-          本身不可拖动、不接收任何手势。 */}
-      <div aria-hidden="true"
-        className="pointer-events-none select-none fixed right-0 z-20 flex items-center justify-end gap-2.5 pr-6"
+      {/* ── 右下角购物车胶囊 ──
+          外层渐变衬底 pointer-events:none，在这块区域拖动/点击都落到菜单上；
+          只有胶囊按钮本身接收点击（pointer-events:auto），点它打开购物车抽屉。 */}
+      <div
+        className="pointer-events-none fixed right-0 z-20 flex items-end justify-end"
         style={{
-          bottom: totalCount > 0 ? '80px' : '0px',
-          height: '56px',
-          width: 'min(44vw, 340px)',
-          background: 'linear-gradient(to left, rgba(18,13,8,0.90) 0%, rgba(18,13,8,0.62) 45%, rgba(18,13,8,0) 100%)',
-          borderTopLeftRadius: '22px',
+          bottom: totalCount > 0 ? '84px' : '0px',
+          height: '76px',
+          width: 'min(46vw, 360px)',
+          padding: '0 16px 14px 0',
+          background: 'linear-gradient(to left, rgba(18,13,8,0.88) 0%, rgba(18,13,8,0.42) 48%, rgba(18,13,8,0) 100%)',
+          borderTopLeftRadius: '20px',
         }}>
-        <ShoppingCart className="w-5 h-5 text-primary" style={{ filter: 'drop-shadow(0 0 6px rgba(217,152,59,0.35))' }} />
-        <span className="text-sm tracking-wide text-foreground/85">{t.menu.cartTitle}</span>
-        {totalCount > 0 && (
-          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-medium text-primary-foreground">
-            {totalCount > 99 ? '99+' : totalCount}
-          </span>
-        )}
+        <button
+          type="button"
+          onClick={() => setCartOpen(true)}
+          aria-label={t.menu.cartTitle}
+          className="pointer-events-auto btn-press flex items-center gap-2 rounded-full pl-3.5 pr-4 h-11 text-foreground"
+          style={{
+            background: 'rgba(234,215,178,0.10)',
+            border: '1px solid rgba(234,215,178,0.22)',
+            boxShadow: '0 6px 20px rgba(0,0,0,0.45)',
+          }}>
+          <ShoppingCart className="w-4 h-4 text-primary" style={{ filter: 'drop-shadow(0 0 6px rgba(217,152,59,0.35))' }} />
+          <span className="text-sm tracking-wide">{t.menu.cartTitle}</span>
+          {totalCount > 0 && (
+            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-medium text-primary-foreground">
+              {totalCount > 99 ? '99+' : totalCount}
+            </span>
+          )}
+        </button>
       </div>
 
       {/* ── 商品详情弹窗 ── */}

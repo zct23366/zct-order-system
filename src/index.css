@@ -620,11 +620,9 @@ body::after {
   background:
     linear-gradient(
       180deg,
-      rgba(234,215,178,0.06) 0%,
-      rgba(160,120,70,0.04) 100%
+      rgba(234,215,178,0.10) 0%,
+      rgba(160,120,70,0.07) 100%
     );
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
   border-top: 1px solid rgba(240,218,178,0.18);
   border-left: 1px solid rgba(220,190,150,0.10);
   border-right: 1px solid rgba(180,140,80,0.05);
