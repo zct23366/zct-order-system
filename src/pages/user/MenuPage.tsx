@@ -108,6 +108,18 @@ export default function MenuPage() {
     navigate('/checkout');
   };
 
+  // 切分类 / 改排序后把列表回到顶部。滚动容器自己带 scroll-behavior:smooth，
+  // 直接改 scrollTop 会做动画、看起来像没刷新，这里临时切成 auto 强制瞬时归位。
+  const listScrollRef = useRef<HTMLElement | null>(null);
+  const resetListScroll = useCallback(() => {
+    const el = listScrollRef.current;
+    if (!el) return;
+    const prev = el.style.scrollBehavior;
+    el.style.scrollBehavior = 'auto';
+    el.scrollTop = 0;
+    el.style.scrollBehavior = prev;
+  }, []);
+
   // 呼叫店员 → 连续点击 15 次（5 秒窗口）进入管理员入口
   const clickCountRef = useRef(0);
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -175,11 +187,11 @@ export default function MenuPage() {
           <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
             <div className="category-fade min-w-0 overflow-x-auto whitespace-nowrap sm:flex-1">
               <div className="inline-flex gap-2">
-                <button onClick={() => setActiveCategory('all')} className={`option-pill ${activeCategory === 'all' ? 'active' : ''}`}>
+                <button onClick={() => { setActiveCategory('all'); resetListScroll(); }} className={`option-pill ${activeCategory === 'all' ? 'active' : ''}`}>
                   {t.menu.all}
                 </button>
                 {visibleCategories.map(cat => (
-                  <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
+                  <button key={cat.id} onClick={() => { setActiveCategory(cat.id); resetListScroll(); }}
                     className={`option-pill ${activeCategory === cat.id ? 'active' : ''}`}>
                     {getLocalizedName(cat, lang)}
                   </button>
@@ -196,7 +208,7 @@ export default function MenuPage() {
                 {SORT_KEYS.map(key => (
                   <button key={key} type="button"
                     aria-pressed={sortKey === key}
-                    onClick={() => setSortKey(key)}
+                    onClick={() => { setSortKey(key); resetListScroll(); }}
                     className={`sort-pill ${sortKey === key ? 'active' : ''}`}>
                     {t.menu.sort[key]}
                   </button>
@@ -297,7 +309,7 @@ export default function MenuPage() {
       </Sheet>
 
       {/* ── 商品网格 ── */}
-      <main className="landscape-scroll px-5 py-3 lg:px-8 lg:py-4 container-landscape">
+      <main ref={listScrollRef} className="landscape-scroll px-5 py-3 lg:px-8 lg:py-4 container-landscape">
         {sortedProducts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-3">
             <UtensilsCrossed className="w-12 h-12 opacity-20" />
