@@ -32,7 +32,24 @@ export function useMenu() {
 
   useEffect(() => { load(); }, [load]);
 
-  return { categories, products, loading, error, reload: load };
+  /**
+   * 静默刷新：不切 loading、失败不报错，用于页面重新回到前台时同步最新菜单。
+   * 路由切换本身会重新挂载并整页加载，这里补的是「菜单页一直开着」的场景
+   * （点餐台平板长时间停在菜单上，后台改价/下架不会自动生效）。
+   * @returns 刷新完成的 Promise
+   */
+  const refresh = useCallback(async () => {
+    try {
+      const [cats, prods] = await Promise.all([fetchCategories(), fetchProducts()]);
+      setCategories(cats);
+      setProducts(prods);
+      setError(null);
+    } catch {
+      // 静默：保留上一份数据，不打断顾客
+    }
+  }, []);
+
+  return { categories, products, loading, error, reload: load, refresh };
 }
 
 // ─── useOrders (admin, with polling) ──────────────────────

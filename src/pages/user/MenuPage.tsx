@@ -21,7 +21,7 @@ const SORT_KEYS: SortKey[] = ['default', 'priceAsc', 'priceDesc'];
 export default function MenuPage() {
   const navigate = useNavigate();
   const { t, lang, setLang } = useLanguage();
-  const { categories, products, loading } = useMenu();
+  const { categories, products, loading, refresh: refreshMenu } = useMenu();
   const { items, addItem, removeItem, updateQuantity, clearCart, totalAmount, totalCount } = useCart();
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [sortKey, setSortKey] = useState<SortKey>('default');
@@ -183,6 +183,25 @@ export default function MenuPage() {
   }, [navigate]);
 
   // 顾客端只显示可见分类；「全部」栏也只列属于可见分类的商品（隐藏分类＝停售归档）
+  // 菜单页回到前台（切回标签页 / 页面重新可见）时静默拉一次最新菜单，
+  // 覆盖「页面一直开着、后台改了价或下架」的情况；30 秒内不重复请求。
+  useEffect(() => {
+    let last = 0;
+    const tick = () => {
+      if (document.visibilityState !== 'visible') return;
+      const now = Date.now();
+      if (now - last < 30_000) return;
+      last = now;
+      void refreshMenu();
+    };
+    document.addEventListener('visibilitychange', tick);
+    window.addEventListener('focus', tick);
+    return () => {
+      document.removeEventListener('visibilitychange', tick);
+      window.removeEventListener('focus', tick);
+    };
+  }, [refreshMenu]);
+
   const visibleCategories = useMemo(() => categories.filter(c => c.is_visible !== false), [categories]);
 
   /**
