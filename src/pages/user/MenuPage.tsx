@@ -369,73 +369,60 @@ export default function MenuPage() {
         </div>
       </main>
 
-      {/* ── 底部结算区 ──
-          与右下角购物车胶囊同处一行：容器只留 14px 底边距，右侧让出 150px 给胶囊，
-          三者（价格条 / 结算按钮 / 购物车胶囊）垂直中线对齐，互不重叠、也不留空挡。 */}
-      {totalCount > 0 && (
-        <div className="sticky bottom-0 shrink-0 px-5 lg:px-8"
-          style={{ paddingBottom: 'calc(14px + env(safe-area-inset-bottom))' }}>
-          <div className="flex items-center justify-between container-landscape gap-3 pr-[92px] sm:pr-[160px]">
-            <div className="flex items-center gap-3 rounded-full h-11 pl-4 pr-5"
-              style={{
-                background: 'linear-gradient(to right, rgba(20,14,10,0.94) 0%, rgba(20,14,10,0.62) 62%, rgba(20,14,10,0.18) 100%)',
-                border: '1px solid rgba(234,215,178,0.10)',
-              }}>
-              <div className="relative shrink-0">
-                <ShoppingCart className="w-5 h-5 text-primary" style={{ filter: 'drop-shadow(0 0 6px rgba(217,152,59,0.3))' }} />
-                <span className="absolute -top-2 -right-2.5 bg-primary text-primary-foreground text-[11px] rounded-full w-5 h-5 flex items-center justify-center font-medium"
-                  style={{ boxShadow: '0 0 8px rgba(217,152,59,0.2)' }}>
-                  {totalCount}
-                </span>
-              </div>
-              <span className="text-lg font-medium text-primary glow-number highlight-number whitespace-nowrap">¥{totalAmount.toFixed(2)}</span>
-            </div>
-
-            <button type="button" onClick={handleCheckout}
-              className="btn-press shrink-0 h-11 px-5 sm:px-8 rounded-full text-base font-medium whitespace-nowrap"
-              style={{
-                background: 'rgba(217,152,59,0.72)',
-                border: '1px solid rgba(245,190,100,0.55)',
-                color: 'hsl(24 40% 9%)',
-              }}>
-              {t.menu.checkout}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── 右下角购物车胶囊 ──
-          外层渐变衬底 pointer-events:none，在这块区域拖动/点击都落到菜单上；
-          只有胶囊按钮本身接收点击（pointer-events:auto），点它打开购物车抽屉。 */}
+      {/* ── 右下角购物车栏 ──
+          价格、去结算、购物车全部整合进这一条，只占右下角，不再横贯整屏遮挡视线。
+          外层衬底 pointer-events:none（拖动/点击穿透到菜单），三个控件各自 auto。
+          购物车为空时只显示购物车胶囊，按钮组整体隐藏。 */}
       <div
-        className="pointer-events-none fixed right-0 z-20 flex items-end justify-end"
+        className="pointer-events-none fixed right-0 bottom-0 z-20 flex items-end justify-end"
         style={{
-          bottom: '0px',
-          height: '72px',
-          width: 'min(46vw, 360px)',
+          width: 'min(94vw, 720px)',
           padding: '0 16px calc(14px + env(safe-area-inset-bottom)) 0',
-          // 右侧先给一段实底，正好垫在胶囊下面（之前全段渐变，胶囊压在半透明处，看着没对齐）
-          background: 'linear-gradient(to left, rgba(16,11,7,0.98) 0%, rgba(16,11,7,0.98) 26%, rgba(16,11,7,0.72) 58%, rgba(16,11,7,0) 100%)',
-          borderTopLeftRadius: '20px',
+          background: 'linear-gradient(to left, rgba(16,11,7,0.98) 0%, rgba(16,11,7,0.88) 38%, rgba(16,11,7,0.42) 72%, rgba(16,11,7,0) 100%)',
+          borderTopLeftRadius: '22px',
         }}>
-        <button
-          type="button"
-          onClick={() => setCartOpen(true)}
-          aria-label={t.menu.cartTitle}
-          className="pointer-events-auto btn-press flex items-center gap-2 rounded-full pl-3.5 pr-4 h-11 text-foreground"
-          style={{
-            background: 'rgba(52,38,22,0.94)',
-            border: '1px solid rgba(234,215,178,0.34)',
-            boxShadow: '0 6px 20px rgba(0,0,0,0.45)',
-          }}>
-          <ShoppingCart className="w-4 h-4 text-primary" style={{ filter: 'drop-shadow(0 0 6px rgba(217,152,59,0.35))' }} />
-          <span className="text-sm tracking-wide hidden sm:inline">{t.menu.cartTitle}</span>
+        <div className="flex items-center gap-2.5">
           {totalCount > 0 && (
-            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-medium text-primary-foreground">
-              {totalCount > 99 ? '99+' : totalCount}
-            </span>
+            <>
+              <div className="pointer-events-auto flex items-center rounded-full h-11 px-5"
+                style={{
+                  background: 'linear-gradient(to right, rgba(20,14,10,0.96) 0%, rgba(20,14,10,0.72) 100%)',
+                  border: '1px solid rgba(234,215,178,0.12)',
+                }}>
+                <span className="text-lg font-medium text-primary glow-number highlight-number whitespace-nowrap">¥{totalAmount.toFixed(2)}</span>
+              </div>
+
+              <button type="button" onClick={handleCheckout}
+                className="pointer-events-auto btn-press shrink-0 h-11 px-6 sm:px-8 rounded-full text-base font-medium whitespace-nowrap"
+                style={{
+                  background: 'rgba(217,152,59,0.72)',
+                  border: '1px solid rgba(245,190,100,0.55)',
+                  color: 'hsl(24 40% 9%)',
+                }}>
+                {t.menu.checkout}
+              </button>
+            </>
           )}
-        </button>
+
+          <button
+            type="button"
+            onClick={() => setCartOpen(true)}
+            aria-label={t.menu.cartTitle}
+            className="pointer-events-auto btn-press flex items-center gap-2 rounded-full pl-3.5 pr-4 h-11 text-foreground"
+            style={{
+              background: 'rgba(52,38,22,0.94)',
+              border: '1px solid rgba(234,215,178,0.34)',
+              boxShadow: '0 6px 20px rgba(0,0,0,0.45)',
+            }}>
+            <ShoppingCart className="w-4 h-4 text-primary" style={{ filter: 'drop-shadow(0 0 6px rgba(217,152,59,0.35))' }} />
+            <span className="text-sm tracking-wide">{t.menu.cartTitle}</span>
+            {totalCount > 0 && (
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-medium text-primary-foreground">
+                {totalCount > 99 ? '99+' : totalCount}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* ── 商品详情弹窗 ── */}
