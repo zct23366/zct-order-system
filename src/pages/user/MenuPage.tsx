@@ -187,15 +187,16 @@ export default function MenuPage() {
 
   /**
    * 「全部」栏的展示顺序：按分类成块排列，分类顺序取后台 sort_order
-   * （组合 → 咖啡 → 茶饮 → 甜点 → 手冲咖啡 → 其他），块内沿用各菜品的 sort_order。
+   * （组合 → 咖啡 → 茶饮 → 甜点 → 手冲咖啡 → 其他），块内按各菜品的 sort_order。
+   * 归块用「主分类」category_id：有些手冲同时挂在「咖啡」下，用 category_ids 会串到咖啡块里。
    */
   const interleavedAll = useMemo(() => {
     const out: Product[] = [];
     for (const c of visibleCategories) {
       const items = products
-        .filter(p => getProductCategoryIds(p).includes(c.id))
+        .filter(p => p.category_id === c.id)
         .sort((a, b) => a.sort_order - b.sort_order);
-      for (const p of items) if (!out.includes(p)) out.push(p);
+      out.push(...items);
     }
     return out;
   }, [products, visibleCategories]);
