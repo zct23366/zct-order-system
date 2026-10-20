@@ -4,6 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "sync:qr": "node scripts/sync-payment-qr.mjs",
+    "prebuild": "node scripts/sync-payment-qr.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "npx biome lint src/"

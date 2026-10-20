@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useCart } from '@/contexts/CartContext';
 import { usePaymentConfig } from '@/hooks/useData';
+import { BUNDLED_PAYMENT_QR, loadRemotePaymentQr } from '@/lib/paymentQr';
 import { createOrder, fetchJpyToCnyRate } from '@/services/api';
 import type { PaymentMethod, Order, PaymentConfig } from '@/types/types';
 
@@ -123,7 +124,7 @@ export default function PaymentPage() {
   const location = useLocation();
   const { t, lang } = useLanguage();
   const { items, totalAmount, clearCart } = useCart();
-  const { config } = usePaymentConfig();
+  const { config, loading: configLoading } = usePaymentConfig();
 
   const paymentMethod = (location.state as { paymentMethod?: PaymentMethod })?.paymentMethod;
   const [submitting, setSubmitting] = useState(false);
@@ -161,12 +162,41 @@ export default function PaymentPage() {
     }
   }, [paymentMethod, items.length, confirmedOrder, navigate]);
 
-  const qrcodeUrl = (() => {
+  const bundledQr = paymentMethod ? BUNDLED_PAYMENT_QR[paymentMethod] : undefined;
+  const remoteQrUrl = (() => {
     if (!paymentMethod || !config) return null;
     if (paymentMethod === 'wechat') return config.wechat_qrcode_url;
     if (paymentMethod === 'alipay') return config.alipay_qrcode_url;
     if (paymentMethod === 'paypay') return config.paypay_qrcode_url;
     return null;
+  })();
+
+  // 后台换了二维码（远程地址与打包图不同）时，先看本地缓存、没有再下载，拿到后替换打包图
+  const [loadedRemoteQr, setLoadedRemoteQr] = useState<{ url: string; src: string } | null>(null);
+  useEffect(() => {
+    if (!remoteQrUrl || !bundledQr || remoteQrUrl === bundledQr.sourceUrl) return;
+    let alive = true;
+    let objectUrl: string | null = null;
+    loadRemotePaymentQr(remoteQrUrl).then(src => {
+      if (!src) return;
+      if (!alive) { URL.revokeObjectURL(src); return; }
+      objectUrl = src;
+      setLoadedRemoteQr({ url: remoteQrUrl, src });
+    });
+    return () => {
+      alive = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [remoteQrUrl, bundledQr]);
+
+  // 打包图先顶上：不等配置查询、不等外部 CDN，付完款立刻能看到码
+  const qrSrc = (() => {
+    if (!paymentMethod) return null;
+    if (configLoading) return bundledQr?.src ?? null;
+    if (!remoteQrUrl) return null;                                  // 后台清空/未配置
+    if (!bundledQr) return remoteQrUrl;                             // 没有打包图的支付方式照旧用远程
+    if (remoteQrUrl === bundledQr.sourceUrl) return bundledQr.src;   // 后台还是这张：直接用打包图
+    return loadedRemoteQr?.url === remoteQrUrl ? loadedRemoteQr.src : bundledQr.src;
   })();
 
   const handlePaid = async () => {
@@ -251,10 +281,17 @@ export default function PaymentPage() {
               {' '}{t.payment.cashDescSuffix}
             </p>
           </div>
-        ) : qrcodeUrl ? (
+        ) : qrSrc ? (
           <div className="glass-card rounded-2xl p-8 flex flex-col items-center gap-4">
             <div className="w-full max-w-[14rem] aspect-square mx-auto rounded-2xl overflow-hidden image-frame bg-white/5 p-3">
-              <img src={qrcodeUrl} alt={`${methodLabel} QR`} className="w-full h-full object-contain" />
+              <img
+                src={qrSrc}
+                alt={`${methodLabel} QR`}
+                width={224}
+                height={224}
+                decoding="async"
+                className="w-full h-full object-contain"
+              />
             </div>
             <p className="text-base text-muted-foreground">
               {t.payment.scanHint}{t.payment.scanHint ? ' ' : ''}{methodLabel}{t.payment.scanHintSuffix}

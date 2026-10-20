@@ -43,6 +43,13 @@ docs\install-print-station.bat
 
 退出 Kiosk：`Alt+F4`
 
+## 支付二维码 ⚡
+
+付款页的微信 / 支付宝 / PayPay 二维码随前端一起发布（`src/assets/payment-qr/`），点「提交订单」立刻出码，不再等跨境 CDN 上的 100–240KB 原图。
+
+- **换码**：照旧在「管理 → 支付配置」上传。后台地址变了以后，付款页先显示打包图顶着，新图下载完自动替换，并写进浏览器 Cache Storage，之后同一台设备直接命中缓存。
+- **恢复首帧出码**：发布一次即可。`npm run build` 的 `prebuild` 会跑 `scripts/sync-payment-qr.mjs`，从后台拉当前二维码重新生成打包图（网络/后台不可用时跳过、沿用旧图，不阻断发布）。也可以手动 `npm run sync:qr`。
+
 ## 本地开发
 
 ```bash

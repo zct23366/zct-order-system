@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { PAYMENT_LABELS } from '@/i18n/translations';
@@ -18,6 +18,9 @@ export default function CheckoutPage() {
   const { items, updateQuantity, removeItem, totalAmount } = useCart();
   const { config, loading: configLoading } = usePaymentConfig();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
+
+  // 结算页停留时预取付款页分包，点「去支付」后不用再等分包下载
+  useEffect(() => { void import('@/pages/user/PaymentPage'); }, []);
 
   const availableMethods: PaymentMethod[] = [];
   if (config?.wechat_enabled) availableMethods.push('wechat');
