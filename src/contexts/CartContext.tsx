@@ -1,12 +1,24 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import type { CartItem, CartItemOption, Product } from '@/types/types';
 
+/**
+ * 购物车行标识：同一商品 + 完全相同的选项才算同一行。
+ * 同一道菜配不同的加料/套餐搭配必须是两行，改数量、删除都按这个 key 定位。
+ * @param item 至少含商品与已选选项的购物车项
+ * @returns 行标识字符串
+ */
+export function cartLineKey(item: Pick<CartItem, 'product' | 'selectedOptions'>): string {
+  return `${item.product.id}|${JSON.stringify(item.selectedOptions)}`;
+}
+
 interface CartContextValue {
   items: CartItem[];
   /** 以 product+selectedOptions 组合加入购物车（每次调用追加1份） */
   addItem: (product: Product, selectedOptions?: CartItemOption[]) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  /** 按行标识删除一整行 */
+  removeItem: (lineKey: string) => void;
+  /** 按行标识改数量，数量 ≤0 时删除该行 */
+  updateQuantity: (lineKey: string, quantity: number) => void;
   clearCart: () => void;
   totalAmount: number;
   totalCount: number;
@@ -28,10 +40,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const addItem = useCallback((product: Product, selectedOptions: CartItemOption[] = []) => {
     setItems(prev => {
       // 同一商品 + 完全相同的选项配置才合并数量
-      const existingIdx = prev.findIndex(i =>
-        i.product.id === product.id &&
-        JSON.stringify(i.selectedOptions) === JSON.stringify(selectedOptions)
-      );
+      const key = cartLineKey({ product, selectedOptions });
+      const existingIdx = prev.findIndex(i => cartLineKey(i) === key);
       if (existingIdx >= 0) {
         return prev.map((item, idx) =>
           idx === existingIdx ? { ...item, quantity: item.quantity + 1 } : item
@@ -41,16 +51,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const removeItem = useCallback((productId: string) => {
-    setItems(prev => prev.filter(i => i.product.id !== productId));
+  const removeItem = useCallback((lineKey: string) => {
+    setItems(prev => prev.filter(i => cartLineKey(i) !== lineKey));
   }, []);
 
-  const updateQuantity = useCallback((productId: string, quantity: number) => {
+  const updateQuantity = useCallback((lineKey: string, quantity: number) => {
     if (quantity <= 0) {
-      setItems(prev => prev.filter(i => i.product.id !== productId));
+      setItems(prev => prev.filter(i => cartLineKey(i) !== lineKey));
     } else {
       setItems(prev =>
-        prev.map(i => i.product.id === productId ? { ...i, quantity } : i)
+        prev.map(i => cartLineKey(i) === lineKey ? { ...i, quantity } : i)
       );
     }
   }, []);

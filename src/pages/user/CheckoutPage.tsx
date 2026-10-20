@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { useCart } from '@/contexts/CartContext';
+import { cartLineKey, useCart } from '@/contexts/CartContext';
 import { usePaymentConfig } from '@/hooks/useData';
 import type { PaymentMethod } from '@/types/types';
 import { PAYMENT_METHOD_LABELS, getLocalizedName } from '@/types/types';
@@ -91,16 +91,16 @@ export default function CheckoutPage() {
                       <p className="text-sm text-primary shrink-0">¥{(unitPrice * item.quantity).toFixed(2)}</p>
                       <div className="flex items-center gap-1 shrink-0">
                         <Button variant="ghost" size="icon" className="h-9 w-9 btn-press"
-                          onClick={() => updateQuantity(item.product.id, item.quantity - 1)}>
+                          onClick={() => updateQuantity(cartLineKey(item), item.quantity - 1)}>
                           <Minus className="w-4 h-4" />
                         </Button>
                         <span className="text-base w-7 text-center text-foreground">{item.quantity}</span>
                         <Button variant="ghost" size="icon" className="h-9 w-9 btn-press"
-                          onClick={() => updateQuantity(item.product.id, item.quantity + 1)}>
+                          onClick={() => updateQuantity(cartLineKey(item), item.quantity + 1)}>
                           <Plus className="w-4 h-4" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:text-destructive btn-press"
-                          onClick={() => removeItem(item.product.id)}>
+                          onClick={() => removeItem(cartLineKey(item))}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>

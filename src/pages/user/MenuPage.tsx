@@ -4,7 +4,7 @@ import { ShoppingCart, Plus, Minus, Trash2, UtensilsCrossed, Phone, Sparkles, X,
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { toast } from 'sonner';
-import { useCart } from '@/contexts/CartContext';
+import { cartLineKey, useCart } from '@/contexts/CartContext';
 import { useMenu } from '@/hooks/useData';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Product, ProductOption, CartItemOption } from '@/types/types';
@@ -356,16 +356,16 @@ export default function MenuPage() {
                             </div>
                             <div className="flex items-center gap-1.5 shrink-0">
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-foreground btn-press"
-                                onClick={() => updateQuantity(item.product.id, item.quantity - 1)}>
+                                onClick={() => updateQuantity(cartLineKey(item), item.quantity - 1)}>
                                 <Minus className="w-4 h-4" />
                               </Button>
                               <span className="text-base w-6 text-center text-foreground font-medium">{item.quantity}</span>
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-foreground btn-press"
-                                onClick={() => updateQuantity(item.product.id, item.quantity + 1)}>
+                                onClick={() => updateQuantity(cartLineKey(item), item.quantity + 1)}>
                                 <Plus className="w-4 h-4" />
                               </Button>
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive btn-press"
-                                onClick={() => removeItem(item.product.id)}>
+                                onClick={() => removeItem(cartLineKey(item))}>
                                 <Trash2 className="w-4 h-4" />
                               </Button>
                             </div>
@@ -451,7 +451,11 @@ export default function MenuPage() {
                         <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                           <Button variant="ghost" size="icon" className="h-9 w-9 lg:h-10 lg:w-10 shrink-0 btn-press"
                             style={{ border: '1px solid rgba(200,150,100,0.12)', borderRadius: '10px' }}
-                            onClick={() => updateQuantity(product.id, qty - 1)}>
+                            onClick={() => {
+                              // 同一道菜在购物车里可能是好几行（不同加料/套餐搭配），卡片上只减第一行
+                              const line = items.find(i => i.product.id === product.id);
+                              if (line) updateQuantity(cartLineKey(line), line.quantity - 1);
+                            }}>
                             <Minus className="w-3.5 h-3.5" />
                           </Button>
                           <span className="text-base lg:text-lg w-7 lg:w-8 text-center font-medium text-foreground">{qty}</span>
