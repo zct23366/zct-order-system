@@ -69,7 +69,7 @@ async function syncQr(method, remoteUrl, prevSourceHash) {
   }
 
   const png = await sharp(source)
-    .resize({ width: 640, kernel: 'lanczos3' })
+    .resize({ width: 640, kernel: 'lanczos3', withoutEnlargement: true })
     .png({ palette: true, colours: 64, quality: 100, effort: 10 })
     .toBuffer();
   await writeFile(target, png);
