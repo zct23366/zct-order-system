@@ -25,6 +25,10 @@ export interface ComboText {
   select: string;
   /** 还差 {n} 项 */
   remaining: string;
+  /** 已选单品下方的加料小节标题 */
+  addons: string;
+  /** 加料价格为 0 */
+  free: string;
 }
 
 const ZH: ComboText = {
@@ -39,6 +43,8 @@ const ZH: ComboText = {
   step: '第 {n} / {m} 步',
   summary: '已选内容',
   close: '关闭',
+  addons: '追加选项',
+  free: '免费',
 };
 
 const JA: ComboText = {
@@ -53,6 +59,8 @@ const JA: ComboText = {
   step: '{m} 中 {n} 番目',
   summary: '選択内容',
   close: '閉じる',
+  addons: '追加オプション',
+  free: '無料',
 };
 
 const EN: ComboText = {
@@ -67,6 +75,8 @@ const EN: ComboText = {
   step: 'Step {n} of {m}',
   summary: 'Your picks',
   close: 'Close',
+  addons: 'Add-ons',
+  free: 'Free',
 };
 
 const KO: ComboText = {
@@ -81,6 +91,8 @@ const KO: ComboText = {
   step: '{m}개 중 {n}번째',
   summary: '선택 내역',
   close: '닫기',
+  addons: '추가 옵션',
+  free: '무료',
 };
 
 export const COMBO_TEXT: Record<string, ComboText> = { zh: ZH, ja: JA, en: EN, ko: KO };

@@ -62,10 +62,15 @@ export async function fetchJpyToCnyRate(): Promise<number | null> {
 
 // ─── 套餐组合 ─────────────────────────────────────────────
 /**
- * 拉取全部套餐分组与选项（选项内嵌商品，用于取名称与图片）。
- * @returns 分组与其选项，均按 sort_order 升序
+ * 拉取全部套餐分组与选项（选项内嵌商品，用于取名称与图片），
+ * 以及这些单品各自可加的选项（套餐里选中的饮品/甜点同样能加糖、换燕麦奶等）。
+ * @returns 分组、选项（均按 sort_order 升序），和 product_id → 该单品可加的选项
  */
-export async function fetchComboCatalog(): Promise<{ groups: ComboGroup[]; options: ComboOption[] }> {
+export async function fetchComboCatalog(): Promise<{
+  groups: ComboGroup[];
+  options: ComboOption[];
+  addonsByProduct: Record<string, ProductOption[]>;
+}> {
   const [{ data: groups, error: gErr }, { data: options, error: oErr }] = await Promise.all([
     supabase.from('combo_groups').select('*').order('sort_order', { ascending: true }),
     supabase
@@ -76,15 +81,36 @@ export async function fetchComboCatalog(): Promise<{ groups: ComboGroup[]; optio
   ]);
   if (gErr) throw gErr;
   if (oErr) throw oErr;
+
+  const comboOptions = (Array.isArray(options) ? options : []).map(o => ({
+    id: o.id,
+    group_id: o.group_id,
+    price_delta: Number(o.price_delta),
+    sort_order: o.sort_order,
+    product: (o as unknown as { product: Product }).product,
+  })).filter(o => !!o.product);
+
+  const productIds = [...new Set(comboOptions.map(o => o.product.id))];
+  const addonsByProduct: Record<string, ProductOption[]> = {};
+  if (productIds.length > 0) {
+    const { data: addons, error: aErr } = await supabase
+      .from('product_options')
+      .select('*')
+      .in('product_id', productIds)
+      .eq('enabled', true)
+      .is('deleted_at', null)
+      .order('sort_order', { ascending: true });
+    if (aErr) throw aErr;
+    for (const row of (Array.isArray(addons) ? addons : []) as ProductOption[]) {
+      if (!row.product_id) continue;
+      (addonsByProduct[row.product_id] ??= []).push(row);
+    }
+  }
+
   return {
     groups: (Array.isArray(groups) ? groups : []) as ComboGroup[],
-    options: (Array.isArray(options) ? options : []).map(o => ({
-      id: o.id,
-      group_id: o.group_id,
-      price_delta: Number(o.price_delta),
-      sort_order: o.sort_order,
-      product: (o as unknown as { product: Product }).product,
-    })).filter(o => !!o.product),
+    options: comboOptions,
+    addonsByProduct,
   };
 }
 

@@ -23,6 +23,7 @@ import { usePrint } from '@/hooks/usePrint';
 import { updateOrderStatus, fetchOrderWithItems, setOrderItemMade, setOrderItemOptionMade } from '@/services/api';
 import type { OrderWithItems, OrderStatus } from '@/types/types';
 import {
+  COMBO_ADDON_SEPARATOR,
   PAYMENT_METHOD_LABELS,
   getNextStatus,
 } from '@/types/types';
@@ -93,7 +94,14 @@ function ProductChips({ order, onToggleItem, onToggleOption }: {
         const modifiers = rows.filter(o => o.option_id !== null);
 
         if (parts.length > 0) {
-          // 套餐：主卡只做标识（不可勾），每个单品一张独立的完成卡
+          // 套餐：主卡只做标识（不可勾），每个单品一张独立的完成卡；
+          // 单品上选的加料（option_id 非空、名字形如「拿铁咖啡 · 换燕麦奶」）挂到对应单品卡的第二行。
+          const addonsOf = (partName: string) => modifiers
+            .filter(m => m.option_name.startsWith(`${partName}${COMBO_ADDON_SEPARATOR}`))
+            .map(m => m.option_name.slice(partName.length + COMBO_ADDON_SEPARATOR.length));
+          const loose = modifiers.filter(
+            m => !parts.some(p => m.option_name.startsWith(`${p.option_name}${COMBO_ADDON_SEPARATOR}`)),
+          );
           return [
             <div key={item.id}
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm"
@@ -102,14 +110,26 @@ function ProductChips({ order, onToggleItem, onToggleOption }: {
               <span className="truncate max-w-[9rem] text-primary/90">{item.product_name}</span>
               {item.quantity > 1 && <span className="text-xs text-primary/60 shrink-0">×{item.quantity}</span>}
             </div>,
-            ...parts.map(part => (
-              <MadeChip
-                key={part.id}
-                label={part.option_name}
-                qty={item.quantity}
-                made={!!part.made}
-                onToggle={() => onToggleOption(part.id, !part.made)}
-              />
+            ...parts.map(part => {
+              const addons = addonsOf(part.option_name);
+              return (
+                <MadeChip
+                  key={part.id}
+                  label={part.option_name}
+                  qty={item.quantity}
+                  made={!!part.made}
+                  sub={addons.length > 0 ? addons.join(' / ') : undefined}
+                  onToggle={() => onToggleOption(part.id, !part.made)}
+                />
+              );
+            }),
+            ...loose.map(row => (
+              <span key={row.id}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm text-muted-foreground"
+                style={{ background: 'rgba(234,215,178,0.04)', border: '1px dashed rgba(200,150,100,0.16)' }}>
+                <span className="text-primary/40 shrink-0">+</span>
+                <span className="truncate max-w-[10rem]">{row.option_name}</span>
+              </span>
             )),
           ];
         }

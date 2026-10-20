@@ -8,8 +8,8 @@ import { useCart } from '@/contexts/CartContext';
 import { useMenu } from '@/hooks/useData';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Product, ProductOption, CartItemOption } from '@/types/types';
-import { getLocalizedName, getLocalizedDesc, getLocalizedOptionName, getLocalizedSectionContent, productInCategory, getProductCategoryIds } from '@/types/types';
-import type { ComboGroup, ComboOption } from '@/types/types';
+import { getLocalizedName, getLocalizedDesc, getLocalizedOptionName, getLocalizedSectionContent, productInCategory, getProductCategoryIds, comboAddonSnapshot } from '@/types/types';
+import type { ComboGroup, ComboOption, ComboSelection } from '@/types/types';
 import { fetchProductOptions, fetchComboCatalog } from '@/services/api';
 import ComboPage from '@/components/menu/ComboPage';
 import { comboTextOf } from '@/i18n/comboText';
@@ -40,14 +40,17 @@ export default function MenuPage() {
   const [comboProduct, setComboProduct] = useState<Product | null>(null);
   const [comboGroups, setComboGroups] = useState<ComboGroup[]>([]);
   const [comboOptions, setComboOptions] = useState<ComboOption[]>([]);
+  /** product_id → 该单品在套餐里可加的选项（加糖、换燕麦奶等） */
+  const [comboAddons, setComboAddons] = useState<Record<string, ProductOption[]>>({});
 
   useEffect(() => {
     let alive = true;
     fetchComboCatalog()
-      .then(({ groups, options }) => {
+      .then(({ groups, options, addonsByProduct }) => {
         if (!alive) return;
         setComboGroups(groups);
         setComboOptions(options);
+        setComboAddons(addonsByProduct);
       })
       .catch(() => { /* 没有套餐数据时菜单照常工作 */ });
     return () => { alive = false; };
@@ -65,14 +68,23 @@ export default function MenuPage() {
     void openDetail(product);
   };
 
-  const handleComboConfirm = (picked: ComboOption[]) => {
+  const handleComboConfirm = ({ picked, addons }: ComboSelection) => {
     if (!comboProduct) return;
-    const selectedOptions: CartItemOption[] = picked.map(o => ({
-      option_id: o.id,
-      name_snapshot: getLocalizedName(o.product, lang),
-      quantity: 1,
-      unit_price: o.price_delta,
-    }));
+    const selectedOptions: CartItemOption[] = [
+      ...picked.map(o => ({
+        option_id: o.id,
+        name_snapshot: getLocalizedName(o.product, lang),
+        quantity: 1,
+        unit_price: o.price_delta,
+      })),
+      // 加料挂上单品名（「拿铁咖啡 · 换燕麦奶」），出餐台据此知道是哪一杯加的
+      ...addons.map(a => ({
+        option_id: a.option.id,
+        name_snapshot: comboAddonSnapshot(getLocalizedName(a.product, lang), getLocalizedOptionName(a.option, lang)),
+        quantity: a.quantity,
+        unit_price: a.option.price,
+      })),
+    ];
     addItem(comboProduct, selectedOptions);
     toast.success(`${getLocalizedName(comboProduct, lang)} · ${t.menu.detail.addToCart}`, { duration: 1600 });
     setComboProduct(null);
@@ -539,6 +551,7 @@ export default function MenuPage() {
             product={comboProduct}
             groups={groups}
             options={comboOptions}
+            addonsByProduct={comboAddons}
             text={comboTextOf(lang)}
             lang={lang}
             onClose={() => setComboProduct(null)}

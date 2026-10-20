@@ -220,6 +220,36 @@ export interface ComboOption {
   sort_order: number;
 }
 
+/**
+ * 套餐加料快照名里的分隔符：前半是单品名、后半是加料名。
+ * 出餐台按它把加料挂回对应单品（`拿铁咖啡 · 换燕麦奶`）。
+ */
+export const COMBO_ADDON_SEPARATOR = ' · ';
+
+/**
+ * 套餐加料的快照名：带上归属的单品，否则两杯都有加料时看不出是哪一杯。
+ * @param productName 单品名称（当前语言）
+ * @param optionName 加料名称（当前语言）
+ * @returns 形如 `拿铁咖啡 · 换燕麦奶` 的字符串
+ */
+export function comboAddonSnapshot(productName: string, optionName: string): string {
+  return `${productName}${COMBO_ADDON_SEPARATOR}${optionName}`;
+}
+
+/** 套餐里给某个已选单品追加的自定义选项 */
+export interface ComboAddonPick {
+  /** 加料挂在哪个已选单品上 */
+  product: Product;
+  option: ProductOption;
+  quantity: number;
+}
+
+/** 套餐二级页确认时回传的完整选择：每组一项 + 各单品的加料 */
+export interface ComboSelection {
+  picked: ComboOption[];
+  addons: ComboAddonPick[];
+}
+
 /** 取当前语言的分组标题（空则回退中文） */
 export function getLocalizedGroupTitle(group: ComboGroup, lang: Lang): string {
   if (lang === 'ja' && group.title_ja) return group.title_ja;

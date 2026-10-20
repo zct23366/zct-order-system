@@ -1,18 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Check, X } from 'lucide-react';
-import type { ComboGroup, ComboOption, Lang, Product } from '@/types/types';
-import { getLocalizedGroupTitle, getLocalizedName } from '@/types/types';
+import type { ComboGroup, ComboOption, ComboSelection, Product, ProductOption } from '@/types/types';
+import { getLocalizedGroupTitle, getLocalizedName, getLocalizedOptionName } from '@/types/types';
+import type { Lang } from '@/i18n/translations';
 import type { ComboText } from '@/i18n/comboText';
 
 interface ComboPageProps {
   product: Product;
   groups: ComboGroup[];
   options: ComboOption[];
+  /** product_id → 该单品可加的自定义选项（已过滤启用与软删） */
+  addonsByProduct: Record<string, ProductOption[]>;
   text: ComboText;
   lang: Lang;
   onClose: () => void;
-  /** 选完后回传每一项的选择，由调用方写进购物车 */
-  onConfirm: (picked: ComboOption[]) => void;
+  /** 选完后回传每一项的选择（含各单品的加料），由调用方写进购物车 */
+  onConfirm: (selection: ComboSelection) => void;
 }
 
 /**
@@ -26,16 +29,39 @@ function deltaLabel(delta: number, isAnchor: boolean, text: ComboText): string {
 
 /**
  * 套餐二级页面：按分组逐步选择，每组 2 列卡片。
- * 选中后高亮 380ms 再过渡到下一组；全部选完展示已选清单与合计。
+ * 选中后高亮 380ms 再过渡到下一组；全部选完展示已选清单，
+ * 有加料的单品（加糖、换燕麦奶……）在清单里直接可选，合计实时更新。
  */
-export default function ComboPage({ product, groups, options, text, lang, onClose, onConfirm }: ComboPageProps) {
+export default function ComboPage({ product, groups, options, addonsByProduct, text, lang, onClose, onConfirm }: ComboPageProps) {
   const [step, setStep] = useState(0);
   const [animKey, setAnimKey] = useState(0);
   const [picks, setPicks] = useState<Record<string, ComboOption>>({});
+  /** 套餐选项 id → (该单品的自定义选项 id → 数量)；只记已选单品上的加料 */
+  const [addonQty, setAddonQty] = useState<Record<string, Record<string, number>>>({});
+
+  const pickedOptions = useMemo(
+    () => groups.map(g => picks[g.id]).filter((o): o is ComboOption => !!o),
+    [groups, picks],
+  );
+
+  /** 加料只算在「已选中」的单品上，回到上一步改选不会留下幽灵金额 */
+  const addonRows = useMemo(() => {
+    const rows: { owner: ComboOption; addon: ProductOption; quantity: number }[] = [];
+    for (const owner of pickedOptions) {
+      const qtyMap = addonQty[owner.id] ?? {};
+      for (const addon of addonsByProduct[owner.product.id] ?? []) {
+        const quantity = qtyMap[addon.id] ?? 0;
+        if (quantity > 0) rows.push({ owner, addon, quantity });
+      }
+    }
+    return rows;
+  }, [pickedOptions, addonsByProduct, addonQty]);
 
   const total = useMemo(
-    () => product.price + Object.values(picks).reduce((sum, o) => sum + o.price_delta, 0),
-    [picks, product.price],
+    () => product.price
+      + pickedOptions.reduce((sum, o) => sum + o.price_delta, 0)
+      + addonRows.reduce((sum, r) => sum + r.addon.price * r.quantity, 0),
+    [pickedOptions, addonRows, product.price],
   );
 
   const done = step >= groups.length;
@@ -71,11 +97,29 @@ export default function ComboPage({ product, groups, options, text, lang, onClos
 
   const choose = (option: ComboOption) => {
     if (!current) return;
-    setPicks(prev => ({ ...prev, [current.id]: option }));
+    const prev = picks[current.id];
+    // 换掉这一项时清掉旧单品上的加料，避免「看不见却算钱」
+    if (prev && prev.id !== option.id && addonQty[prev.id]) {
+      setAddonQty(m => {
+        const next = { ...m };
+        delete next[prev.id];
+        return next;
+      });
+    }
+    setPicks(prevPicks => ({ ...prevPicks, [current.id]: option }));
     window.setTimeout(() => {
       setStep(s => Math.min(s + 1, groups.length));
       setAnimKey(k => k + 1);
     }, 380);
+  };
+
+  /** 单品加料：选中即 1 份，再点取消（与详情页的数量加减不同，套餐里不叠份数） */
+  const toggleAddon = (owner: ComboOption, addon: ProductOption) => {
+    setAddonQty(m => {
+      const qtyMap = { ...(m[owner.id] ?? {}) };
+      qtyMap[addon.id] = (qtyMap[addon.id] ?? 0) > 0 ? 0 : 1;
+      return { ...m, [owner.id]: qtyMap };
+    });
   };
 
   const goBack = () => {
@@ -88,7 +132,10 @@ export default function ComboPage({ product, groups, options, text, lang, onClos
   };
 
   const confirm = () => {
-    onConfirm(groups.map(g => picks[g.id]).filter(Boolean));
+    onConfirm({
+      picked: pickedOptions,
+      addons: addonRows.map(({ owner, addon, quantity }) => ({ product: owner.product, option: addon, quantity })),
+    });
   };
 
   const pickedList = groups.map(g => ({ group: g, option: picks[g.id] })).filter(x => !!x.option);
@@ -215,24 +262,56 @@ export default function ComboPage({ product, groups, options, text, lang, onClos
 
           {done && (
             <div key={animKey} className="combo-step flex-1 min-h-0 flex flex-col gap-2 overflow-y-auto">
-              {pickedList.map(({ group, option }) => (
-                <div key={group.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
-                  style={{ background: 'rgba(234,215,178,0.04)', border: '1px solid rgba(200,150,100,0.10)' }}>
-                  <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0">
-                    {option.product.image_url
-                      ? <img src={option.product.image_url} alt="" className="w-full h-full object-cover" />
-                      : <div className="w-full h-full bg-muted" />}
+              {pickedList.map(({ group, option }) => {
+                const addons = addonsByProduct[option.product.id] ?? [];
+                const qtyMap = addonQty[option.id] ?? {};
+                return (
+                  <div key={group.id} className="rounded-xl"
+                    style={{ background: 'rgba(234,215,178,0.04)', border: '1px solid rgba(200,150,100,0.10)' }}>
+                    <div className="flex items-center gap-3 px-3 py-2.5">
+                      <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0">
+                        {option.product.image_url
+                          ? <img src={option.product.image_url} alt="" className="w-full h-full object-cover" />
+                          : <div className="w-full h-full bg-muted" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-muted-foreground">{getLocalizedGroupTitle(group, lang)}</p>
+                        <p className="text-sm text-foreground truncate">{getLocalizedName(option.product, lang)}</p>
+                      </div>
+                      <span className="text-xs shrink-0"
+                        style={{ color: option.price_delta === 0 ? 'hsl(var(--muted-foreground))' : 'hsl(var(--primary))' }}>
+                        {deltaLabel(option.price_delta, anchorIdOf.get(group.id) === option.id, text)}
+                      </span>
+                    </div>
+
+                    {addons.length > 0 && (
+                      <div className="px-3 pb-2.5">
+                        <p className="text-[11px] text-muted-foreground mb-1.5">{text.addons}</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {addons.map(addon => {
+                            const on = (qtyMap[addon.id] ?? 0) > 0;
+                            return (
+                              <button key={addon.id} type="button" onClick={() => toggleAddon(option, addon)}
+                                className="btn-press flex items-center gap-1 px-2.5 h-8 rounded-full text-xs transition-colors"
+                                style={{
+                                  background: on ? 'rgba(217,152,59,0.16)' : 'rgba(234,215,178,0.04)',
+                                  border: on ? '1px solid rgba(245,190,100,0.55)' : '1px solid rgba(200,150,100,0.12)',
+                                  color: on ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                                }}>
+                                {on && <Check className="w-3 h-3" />}
+                                {getLocalizedOptionName(addon, lang)}
+                                <span className="opacity-70">
+                                  {addon.price === 0 ? text.free : `+¥${addon.price.toFixed(0)}`}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground">{getLocalizedGroupTitle(group, lang)}</p>
-                    <p className="text-sm text-foreground truncate">{getLocalizedName(option.product, lang)}</p>
-                  </div>
-                  <span className="text-xs shrink-0"
-                    style={{ color: option.price_delta === 0 ? 'hsl(var(--muted-foreground))' : 'hsl(var(--primary))' }}>
-                    {deltaLabel(option.price_delta, anchorIdOf.get(group.id) === option.id, text)}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
