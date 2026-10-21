@@ -33,7 +33,7 @@ export default function OrderSuccessPage() {
   if (!order) return null;
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-6 page-enter">
+    <div className="app-page bg-background flex items-center justify-center px-6 page-enter">
       <div className="w-full max-w-md flex flex-col items-center gap-8 text-center">
 
         <div className="w-28 h-28 rounded-full flex items-center justify-center animate-pulse-glow"

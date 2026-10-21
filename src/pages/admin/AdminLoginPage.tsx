@@ -57,7 +57,7 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background page-enter">
+    <div className="app-page flex items-center justify-center relative overflow-hidden bg-background page-enter">
       <div className="ambient-lights" aria-hidden="true">
         <div className="ambient-light bokeh--gold-primary" />
         <div className="ambient-light bokeh--amber-large" />

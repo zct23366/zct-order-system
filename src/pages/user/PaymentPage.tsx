@@ -224,7 +224,7 @@ export default function PaymentPage() {
   const methodLabel = PAYMENT_LABELS[lang][paymentMethod];
 
   return (
-    <div className="min-h-screen bg-background page-enter">
+    <div className="app-page bg-background page-enter">
       {/* 订单号覆盖层 */}
       {confirmedOrder && (
         <OrderNumberOverlay order={confirmedOrder} onDone={handleOverlayDone} />

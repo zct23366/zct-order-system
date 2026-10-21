@@ -37,7 +37,7 @@ export default function CheckoutPage() {
   if (items.length === 0) { navigate('/'); return null; }
 
   return (
-    <div className="min-h-screen bg-background page-enter">
+    <div className="app-page bg-background page-enter">
       <div className="max-w-3xl mx-auto px-5 py-6 md:px-8 md:py-8 flex flex-col gap-5">
 
         {/* 返回 */}

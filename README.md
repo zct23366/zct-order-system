@@ -22,6 +22,48 @@ React 18 + Vite + Tailwind 3
   GitHub CI/CD: push → 自动构建部署
 ```
 
+## iPad 无边框独立运行 📱
+
+顾客桌上的 iPad 用「添加到主屏幕」启动，页面就像原生 App：没有地址栏、没有工具栏，状态栏浮在内容上，四边到边。
+
+### 在 iPad 上装一次
+
+1. 用 Safari 打开站点；
+2. 点顶部「分享」→「添加到主屏幕」；
+3. 点右上角「添加」，之后从主屏图标启动就是全屏独立运行。
+
+浏览器里打开时，左下角会浮一个「添加到桌面 · 全屏运行」胶囊，点开就是同样三步；点 × 后这台设备不再提示（记在 `localStorage` 的 `zct-order:a2hs-dismissed`）。
+
+### 各部分在哪
+
+| 作用 | 位置 |
+| --- | --- |
+| 清单（`display: standalone`、图标、主题色） | `public/manifest.webmanifest` |
+| Apple 专有 meta + 各代 iPad 启动图 | `index.html` |
+| 图标与启动图位图 | `public/icons/`、`public/splash/`（脚本生成，别手改） |
+| 首帧独窗标记 `<html class="is-standalone is-ios">` | `index.html` 的内联脚本 |
+| 安全区变量与整页容器 | `src/index.css` 的 `--app-safe-top/bottom`、`.app-page`、`.landscape-container` |
+| 安装引导胶囊与弹窗 | `src/components/common/AddToHomeScreen.tsx` |
+| 四语言引导文案 | `src/i18n/translations.ts` 的 `pwa` 段 |
+
+### 改图标 / 换机型
+
+```bash
+npm run generate:pwa   # 从 public/favicon.jpg 重新生成图标与全部启动图
+npm run build
+npm run check:pwa      # 起本地静态服务 + 无头 Edge，逐项验清单、图标、启动图、独窗行为
+```
+
+`check:pwa` 会断言：清单字段与图标尺寸对得上、每张启动图的像素尺寸与 media 查询一致、桌面浏览器不乱弹安装提示、iPadOS 浏览器态出现胶囊、独窗态 `<html>` 带上 `is-standalone` 且 `.app-page` 真的让出 20px 状态栏、页面没有横向溢出。加 `--keep-screenshot` 会在系统临时目录留截图。
+
+新机型只要在 `scripts/generate-pwa-assets.mjs` 的 `IPAD_SIZES` 里加一行 CSS 尺寸，重跑 `npm run generate:pwa`，再在 `index.html` 补一对竖/横屏 `apple-touch-startup-image`（媒体查询是 CSS 尺寸，文件名是 2 倍像素）。
+
+### 注意
+
+- 状态栏是 `black-translucent`（浮在内容上），新页面的根节点要用 `.app-page`（或菜单页那类整屏布局的 `.landscape-container`），否则顶栏会钻到时钟下面。
+- 只有 Safari 能把网页添加到主屏幕；引导里已经写明「换 Safari 打开」。
+- 结账、付款、下单成功页和后台页面不显示引导胶囊，免得在收银流程上多盖一层。
+
 ## 打印站配置 🖨️
 
 在收款台电脑上部署全屏 Kiosk 打印站：

@@ -25,7 +25,7 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex app-page w-full bg-background">
       {/* ✨ 散景光斑 */}
       <div className="ambient-lights" aria-hidden="true">
         <div className="ambient-light bokeh--gold-mid" />

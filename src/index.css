@@ -835,9 +835,9 @@ body::after {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  /* iOS 刘海屏安全区 */
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
+  /* 安全区：浏览器态取 env()（刘海屏），独窗态见文件末尾的 --app-safe-* 变量 */
+  padding-top: var(--app-safe-top);
+  padding-bottom: var(--app-safe-bottom);
 }
 
 /* 横屏滚动区 */
@@ -1129,4 +1129,41 @@ body::after {
   color: hsl(var(--muted-foreground));
   margin-top: 0.25rem;
   letter-spacing: 0.04em;
+}
+
+/* ═══════════════════════════════════════
+   📱 iPadOS 无边框独立运行
+   「添加到主屏幕」后网页以独窗启动，没有地址栏与工具栏，页面四边到边；
+   状态栏取 black-translucent 浮在内容之上，所以靠下面这套变量把内容让开。
+   ═══════════════════════════════════════ */
+
+/* 浏览器态与原来的 env() 取值一致；独窗态由 index.html 的内联脚本先打上
+   is-standalone / is-ios，早于首帧，不会先按浏览器布局闪一下。 */
+:root {
+  --app-safe-top: env(safe-area-inset-top, 0px);
+  --app-safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* iPad 的状态栏高度是 20px 上下，WebKit 在独窗里有时把 env() 报成 0；
+   补一个下限，顶栏不会钻到时钟下面。iPhone 刘海报的是 44px 以上，max() 不会压低它。 */
+html.is-standalone.is-ios {
+  --app-safe-top: max(env(safe-area-inset-top, 0px), 20px);
+}
+
+/* 独窗里没有浏览器工具栏兜底，整页回弹会露出底色 */
+html.is-standalone,
+html.is-standalone body {
+  overscroll-behavior: none;
+  background-color: hsl(var(--background));
+}
+
+@layer components {
+  /* 整页容器：把状态栏 / 底部指示条的高度让出来。
+     只在独窗里真的掉出边距（浏览器态 env() 为 0），所以老页面外观不变。
+     用 min-height 而非 height——页面内部该滚还是能滚。 */
+  .app-page {
+    min-height: 100dvh;
+    padding-top: var(--app-safe-top);
+    padding-bottom: var(--app-safe-bottom);
+  }
 }

@@ -347,6 +347,19 @@ const ZH = {
     total: '合计',
     footer: '感谢光临',
   },
+  // ── 添加到主屏幕（iPadOS 无边框独立运行）──
+  pwa: {
+    pill: '添加到桌面 · 全屏运行',
+    title: '全屏独立运行',
+    intro: '把这个页面添加到主屏幕，下次点开就是没有地址栏和工具栏的全屏点餐页。',
+    stepShare: '点按 Safari 顶部的「分享」按钮',
+    stepAdd: '在弹出菜单里选「添加到主屏幕」',
+    stepConfirm: '点右上角的「添加」，桌面上就会多一个图标',
+    safariHint: '只有 Safari 能添加到主屏幕；如果你用的是其他浏览器，请换 Safari 重新打开。',
+    install: '安装到桌面',
+    dismiss: '不再提示',
+    gotIt: '知道了',
+  },
 };
 
 const JA: Translations = {
@@ -658,6 +671,19 @@ const JA: Translations = {
     amount: '金額',
     total: '合計',
     footer: 'ご来店ありがとうございます',
+  },
+  // ── ホーム画面に追加（iPadOS フルスクリーン起動）──
+  pwa: {
+    pill: 'ホーム画面に追加 · 全画面',
+    title: 'フルスクリーンで起動',
+    intro: 'このページをホーム画面に追加すると、次からはアドレスバーもツールバーもない全画面の注文画面で開きます。',
+    stepShare: 'Safari 上部の「共有」ボタンをタップ',
+    stepAdd: 'メニューから「ホーム画面に追加」を選択',
+    stepConfirm: '右上の「追加」をタップするとホーム画面にアイコンができます',
+    safariHint: 'ホーム画面に追加できるのは Safari だけです。他のブラウザで開いている場合は Safari で開き直してください。',
+    install: 'ホーム画面に追加',
+    dismiss: '今後表示しない',
+    gotIt: '閉じる',
   },
 };
 
@@ -971,6 +997,19 @@ const EN: Translations = {
     total: 'Total',
     footer: 'Thank you for your visit',
   },
+  // ── Add to Home Screen (iPadOS full-screen launch) ──
+  pwa: {
+    pill: 'Add to Home Screen',
+    title: 'Run full screen',
+    intro: 'Add this page to your Home Screen and it opens next time as a full-screen order screen — no address bar, no toolbars.',
+    stepShare: 'Tap Share at the top of Safari',
+    stepAdd: 'Choose “Add to Home Screen” from the menu',
+    stepConfirm: 'Tap “Add” — the icon appears on your Home Screen',
+    safariHint: 'Only Safari can add a web app to the Home Screen. If you opened this page in another browser, please reopen it in Safari.',
+    install: 'Install app',
+    dismiss: 'Don’t show again',
+    gotIt: 'Got it',
+  },
 };
 
 const KO: Translations = {
@@ -1282,6 +1321,19 @@ const KO: Translations = {
     amount: '금액',
     total: '합계',
     footer: '방문해 주셔서 감사합니다',
+  },
+  // ── 홈 화면에 추가 (iPadOS 전체 화면 실행) ──
+  pwa: {
+    pill: '홈 화면에 추가 · 전체 화면',
+    title: '전체 화면으로 실행',
+    intro: '이 페이지를 홈 화면에 추가하면 다음부터 주소 표시줄과 도구 모음 없이 전체 화면 주문 화면으로 열립니다.',
+    stepShare: 'Safari 상단의 「공유」 버튼을 누릅니다',
+    stepAdd: '메뉴에서 「홈 화면에 추가」를 선택합니다',
+    stepConfirm: '오른쪽 위 「추가」를 누르면 홈 화면에 아이콘이 생깁니다',
+    safariHint: '홈 화면에 추가는 Safari에서만 됩니다. 다른 브라우저로 열었다면 Safari로 다시 열어 주세요.',
+    install: '홈 화면에 추가',
+    dismiss: '다시 표시 안 함',
+    gotIt: '확인',
   },
 };
 

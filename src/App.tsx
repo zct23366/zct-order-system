@@ -1,6 +1,7 @@
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import IntersectObserver from '@/components/common/IntersectObserver';
+import AddToHomeScreen from '@/components/common/AddToHomeScreen';
 import { Toaster } from '@/components/ui/sonner';
 import { AdminProvider } from '@/contexts/AdminContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
@@ -64,6 +65,8 @@ const App: React.FC = () => {
             </Routes>
           </Suspense>
           <Toaster />
+          {/* iPadOS 无边框独立运行：浏览器态才提示「添加到主屏幕」，独窗里自动隐藏 */}
+          <AddToHomeScreen />
         </AdminProvider>
       </Router>
     </LanguageProvider>

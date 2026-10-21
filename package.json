@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "vite",
     "sync:qr": "node scripts/sync-payment-qr.mjs",
+    "generate:pwa": "node scripts/generate-pwa-assets.mjs",
+    "check:pwa": "node scripts/check-pwa.mjs",
     "prebuild": "node scripts/sync-payment-qr.mjs",
     "build": "vite build",
     "preview": "vite preview",

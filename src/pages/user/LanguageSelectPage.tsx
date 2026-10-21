@@ -16,7 +16,7 @@ export default function LanguageSelectPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-6 page-enter relative overflow-hidden">
+    <div className="app-page bg-background flex items-center justify-center px-6 page-enter relative overflow-hidden">
       {/* 散景光斑 */}
       <div className="ambient-lights" aria-hidden="true">
         <div className="ambient-light bokeh--gold-mid" />
