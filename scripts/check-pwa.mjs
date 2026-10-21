@@ -376,13 +376,24 @@ async function shoot(cdp, sessionId, name) {
 }
 
 async function main() {
-  if (!fs.existsSync(path.join(DIST, 'index.html'))) {
-    throw new Error('dist/ 不存在，请先 npm run build');
+  // --base-url 直接打线上（发布后复验用），否则先把 dist/ 起成静态服务
+  const baseUrlArg = process.argv.find(arg => arg.startsWith('--base-url='));
+  let server = null;
+  let origin;
+  if (baseUrlArg) {
+    origin = baseUrlArg.slice('--base-url='.length).replace(/\/+$/, '');
+    console.log(`目标：${origin}（线上）`);
+  } else {
+    if (!fs.existsSync(path.join(DIST, 'index.html'))) {
+      throw new Error('dist/ 不存在，请先 npm run build');
+    }
+    const started = await startStaticServer();
+    server = started.server;
+    origin = `http://127.0.0.1:${started.port}`;
+    console.log(`目标：${origin}（本地 dist/）`);
   }
 
   const edge = findEdge();
-  const { server, port } = await startStaticServer();
-  const origin = `http://127.0.0.1:${port}`;
   const debugPort = await freePort();
   const profileDir = path.join(os.tmpdir(), `pwa-check-${process.pid}`);
 
@@ -556,8 +567,8 @@ async function main() {
       // 没连上或已退出
     }
     cdp?.close();
-    server.closeAllConnections?.();
-    server.close();
+    server?.closeAllConnections?.();
+    server?.close();
     if (targetId) {
       try {
         execFileSync('taskkill', ['/PID', String(browser.pid), '/T', '/F'], { stdio: 'ignore' });

@@ -54,7 +54,7 @@ npm run build
 npm run check:pwa      # 起本地静态服务 + 无头 Edge，逐项验清单、图标、启动图、独窗行为
 ```
 
-`check:pwa` 会断言：清单字段与图标尺寸对得上、每张启动图的像素尺寸与 media 查询一致、桌面浏览器不乱弹安装提示、iPadOS 浏览器态出现胶囊、独窗态 `<html>` 带上 `is-standalone` 且 `.app-page` 真的让出 20px 状态栏、页面没有横向溢出。加 `--keep-screenshot` 会在系统临时目录留截图。
+`check:pwa` 会断言：清单字段与图标尺寸对得上、每张启动图的像素尺寸与 media 查询一致、桌面浏览器不乱弹安装提示、iPadOS 浏览器态出现胶囊、独窗态 `<html>` 带上 `is-standalone` 且 `.app-page` 真的让出 20px 状态栏、页面没有横向溢出。加 `--keep-screenshot` 会在系统临时目录留截图；加 `--base-url=https://app-cor1b70nj9xd.vercel.app` 直接复验线上（发布后跑这条）。
 
 新机型只要在 `scripts/generate-pwa-assets.mjs` 的 `IPAD_SIZES` 里加一行 CSS 尺寸，重跑 `npm run generate:pwa`，再在 `index.html` 补一对竖/横屏 `apple-touch-startup-image`（媒体查询是 CSS 尺寸，文件名是 2 倍像素）。
 
