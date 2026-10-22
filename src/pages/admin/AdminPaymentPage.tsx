@@ -183,7 +183,9 @@ export default function AdminPaymentPage() {
     try {
       await updateDefaultLang(l);
       toast.success(tp.defaultLangSaved ?? '默认语言已保存');
-    } catch {
+    } catch (error) {
+      // 失败原因大多是请求被拒（例如缺少 WHERE 的 400），打个日志方便现场排查
+      console.error('[default-lang] 保存失败', error);
       toast.error(tp.saveFailed);
     } finally {
       setSavingLang(false);

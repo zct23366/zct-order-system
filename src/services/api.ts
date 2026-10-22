@@ -477,7 +477,10 @@ export async function fetchDefaultLang(): Promise<string> {
 export async function updateDefaultLang(lang: string): Promise<void> {
   const { error } = await supabase
     .from('admin_config')
-    .update({ default_lang: lang });
+    .update({ default_lang: lang })
+    // admin_config 是单行表，但仍必须带 WHERE：PostgREST 对无过滤条件的 UPDATE
+    // 直接回 400（code 21000 "UPDATE requires a WHERE clause"），界面就显示「保存失败」
+    .not('id', 'is', null);
   if (error) throw error;
 }
 
