@@ -23,6 +23,8 @@ export interface ComboText {
   close: string;
   /** 菜单卡上套餐按钮的文字 */
   select: string;
+  /** 菜单卡上套餐名称前的角标 */
+  badge: string;
   /** 还差 {n} 项 */
   remaining: string;
   /** 已选单品下方的加料小节标题 */
@@ -33,6 +35,7 @@ export interface ComboText {
 
 const ZH: ComboText = {
   select: '选择',
+  badge: '套餐',
   remaining: '还差 {n} 项',
   pick: '每组选 1 项',
   included: '已含',
@@ -49,6 +52,7 @@ const ZH: ComboText = {
 
 const JA: ComboText = {
   select: '選ぶ',
+  badge: 'セット',
   remaining: 'あと {n} 項目',
   pick: '各グループから1つ選択',
   included: '込み',
@@ -65,6 +69,7 @@ const JA: ComboText = {
 
 const EN: ComboText = {
   select: 'Select',
+  badge: 'Set',
   remaining: '{n} left to pick',
   pick: 'Pick one per group',
   included: 'Included',
@@ -81,6 +86,7 @@ const EN: ComboText = {
 
 const KO: ComboText = {
   select: '선택',
+  badge: '세트',
   remaining: '{n}개 남음',
   pick: '그룹마다 1개 선택',
   included: '포함',

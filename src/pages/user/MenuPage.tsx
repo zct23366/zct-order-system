@@ -430,6 +430,9 @@ export default function MenuPage() {
                   <div className="p-4 lg:p-5 flex flex-col gap-1.5 flex-1 relative z-10">
                     <p className="text-base lg:text-lg font-medium text-foreground text-balance line-clamp-2 leading-snug"
                       style={{ fontFamily: "'Noto Serif SC','STSong',serif", letterSpacing: '0.04em' }}>
+                      {comboProductIds.has(product.id) && (
+                        <span className="combo-badge">{comboTextOf(lang).badge}</span>
+                      )}
                       {getLocalizedName(product, lang)}
                     </p>
                     {getLocalizedDesc(product, lang) && (
