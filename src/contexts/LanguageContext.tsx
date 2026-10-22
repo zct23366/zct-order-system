@@ -29,6 +29,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }).catch(() => {/* 网络失败保持默认 */});
   }, []);
 
+  // 让 <html lang> 跟着界面语言走：写死 en 时中文内容会触发 Edge/Safari 的「翻译此页」气泡，
+  // 桌面出餐屏是全屏独窗，那气泡会直接糊在屏幕上。
+  useEffect(() => {
+    document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang;
+  }, [lang]);
+
   return (
     <LanguageContext.Provider value={{ lang, setLang, t }}>
       {children}

@@ -64,6 +64,16 @@ npm run check:pwa      # 起本地静态服务 + 无头 Edge，逐项验清单�
 - 只有 Safari 能把网页添加到主屏幕；引导里已经写明「换 Safari 打开」。
 - 结账、付款、下单成功页和后台页面不显示引导胶囊，免得在收银流程上多盖一层。
 
+## 出餐展示屏（桌面无边框窗口）🖥️
+
+把「出餐展示」做成桌面上的一个图标：双击就全屏铺满指定显示器，没有地址栏、标题栏和任务栏。
+
+双击 `desktop\install-desktop.cmd` → 桌面出现「出餐展示屏」图标。细节（换显示器、开机自启、参数、卸载）见 [desktop/README.md](desktop/README.md)。
+
+- 启动器 `desktop\order-screen.ps1` 用 Edge kiosk 模式打开 `/admin/display?kiosk=1`，`-Monitor N` 指定落在哪块屏。
+- 页面侧配套改动：未登录访问后台深链会带上 `?next=`，登录后跳回原目标；出餐展示带 `?kiosk=1` 时直接进全屏展示态（不显示后台侧栏）。
+- 关闭用 `Alt+F4`；日志在 `%LOCALAPPDATA%\zct-order-screen\launcher.log`。
+
 ## 打印站配置 🖨️
 
 在收款台电脑上部署全屏 Kiosk 打印站：

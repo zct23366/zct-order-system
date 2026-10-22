@@ -151,7 +151,10 @@ function DisplayContent({
 
 export default function AdminDisplayPage() {
   const { orders, loading } = useDisplayOrders();
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  // 桌面出餐屏用 /admin/display?kiosk=1 启动：一进来就是全屏展示，不用每次手点「全屏」
+  const [isFullscreen, setIsFullscreen] = useState(
+    () => new URLSearchParams(window.location.search).get('kiosk') === '1',
+  );
 
   const makingOrders = orders.filter(o => o.status === 'making');
   const readyOrders  = orders.filter(o => o.status === 'ready');

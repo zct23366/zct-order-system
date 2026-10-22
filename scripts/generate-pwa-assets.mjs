@@ -21,6 +21,7 @@ const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const SRC = path.join(ROOT, 'public', 'favicon.jpg');
 const ICON_DIR = path.join(ROOT, 'public', 'icons');
 const SPLASH_DIR = path.join(ROOT, 'public', 'splash');
+const DESKTOP_ICON = path.join(ROOT, 'desktop', 'assets', 'order-screen.ico');
 
 /** 页面背景色（index.css 的 --background: hsl(20 30% 5%)），启动图与图标底色都用它。 */
 const BACKGROUND = '#0D0905';
@@ -92,6 +93,45 @@ async function writeIcons(brandColor) {
   console.log(`✓ ${path.relative(ROOT, touchFile)}`);
 }
 
+/**
+ * 写一个多尺寸 .ico：每帧用 PNG 存放（Vista 起支持），
+ * 桌面快捷方式只认 .ico，PNG 直接当图标路径是不生效的。
+ */
+async function writeIco(file, sizes) {
+  await fs.mkdir(path.dirname(file), { recursive: true });
+
+  const frames = [];
+  for (const size of sizes) {
+    frames.push({
+      size,
+      png: await sharp(SRC).resize(size, size, { fit: 'cover' }).png({ compressionLevel: 9 }).toBuffer(),
+    });
+  }
+
+  const header = Buffer.alloc(6);
+  header.writeUInt16LE(0, 0); // reserved
+  header.writeUInt16LE(1, 2); // 1 = icon
+  header.writeUInt16LE(frames.length, 4);
+
+  const entries = Buffer.alloc(16 * frames.length);
+  let offset = header.length + entries.length;
+  frames.forEach((frame, index) => {
+    const at = 16 * index;
+    entries.writeUInt8(frame.size >= 256 ? 0 : frame.size, at); // 0 表示 256
+    entries.writeUInt8(frame.size >= 256 ? 0 : frame.size, at + 1);
+    entries.writeUInt8(0, at + 2); // 调色板色数
+    entries.writeUInt8(0, at + 3); // reserved
+    entries.writeUInt16LE(1, at + 4); // color planes
+    entries.writeUInt16LE(32, at + 6); // 每像素位数
+    entries.writeUInt32LE(frame.png.length, at + 8);
+    entries.writeUInt32LE(offset, at + 12);
+    offset += frame.png.length;
+  });
+
+  await fs.writeFile(file, Buffer.concat([header, entries, ...frames.map(frame => frame.png)]));
+  console.log(`✓ ${path.relative(ROOT, file)}  ${sizes.join('/')}`);
+}
+
 async function writeSplash(brandColor) {
   await fs.mkdir(SPLASH_DIR, { recursive: true });
 
@@ -126,4 +166,5 @@ const brandColor = await sampleBrandColor();
 console.log(`brand color: ${brandColor}`);
 await writeIcons(brandColor);
 await writeSplash(brandColor);
-console.log('PWA 资产生成完毕。');
+await writeIco(DESKTOP_ICON, [16, 24, 32, 48, 64, 128, 256]);
+console.log('PWA / 桌面图标资产生成完毕。');

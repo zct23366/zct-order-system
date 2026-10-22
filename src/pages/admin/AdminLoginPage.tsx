@@ -12,6 +12,10 @@ export default function AdminLoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const fromMenu = !!(location.state as { fromMenu?: boolean } | null)?.fromMenu;
+  // 登录后回哪：AdminGuard 会把原目标塞进 ?next=，桌面出餐屏靠它落到 /admin/display?kiosk=1。
+  // 只认后台路径，避免被构造成站外跳转。
+  const nextParam = new URLSearchParams(location.search).get('next');
+  const afterLogin = nextParam && /^\/admin(\/|\?|$)/.test(nextParam) ? nextParam : '/admin/orders';
   const { isLoggedIn, login } = useAdmin();
   const { t } = useLanguage();
   const tl = t.adminLogin;
@@ -23,7 +27,7 @@ export default function AdminLoginPage() {
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   if (isLoggedIn) {
-    return <Navigate to="/admin/orders" replace />;
+    return <Navigate to={afterLogin} replace />;
   }
 
   const handleClick = () => {
@@ -44,7 +48,7 @@ export default function AdminLoginPage() {
       const ok = await verifyAdminPassword(password.trim());
       if (ok) {
         login();
-        navigate('/admin/orders', { replace: true });
+        navigate(afterLogin, { replace: true });
       } else {
         toast.error(tl.error);
         setPassword('');
