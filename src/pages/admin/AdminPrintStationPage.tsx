@@ -82,6 +82,34 @@ export default function AdminPrintStationPage() {
     }
   }, [printOrder]);
 
+  // 测试打印：不依赖订单，验证「浏览器 → 默认打印机」这条通路是否通。
+  // 打不出纸时先跑 print-station\fix-printer.cmd（端口绑错 / 队列脱机）。
+  const handleTestPrint = useCallback(() => {
+    const now = new Date().toISOString();
+    const testOrder: OrderWithItems = {
+      id: 'test-print',
+      order_number: `TEST-${String(Date.now()).slice(-4)}`,
+      status: 'making',
+      payment_method: null,
+      total_amount: 0,
+      customer_lang: 'zh',
+      created_at: now,
+      updated_at: now,
+      order_items: [{
+        id: 'test-item',
+        order_id: 'test-print',
+        product_id: 'test-product',
+        product_name: '打印通路测试',
+        product_price: 0,
+        quantity: 1,
+        subtotal: 0,
+        made: false,
+      }],
+    };
+    printOrder(testOrder);
+    toast.success('已发送测试打印，请看打印机是否出纸');
+  }, [printOrder]);
+
   // Supabase Realtime 订阅
   useEffect(() => {
     setConnState('connecting');
@@ -123,10 +151,18 @@ export default function AdminPrintStationPage() {
           <Printer className="w-5 h-5 text-primary" style={{ filter: 'drop-shadow(0 0 8px rgba(217,152,59,0.4))' }} />
           <h1 className="text-2xl text-foreground" style={{ fontFamily: "'Noto Serif SC','STSong',serif" }}>打印站</h1>
         </div>
-        <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-foreground"
-          onClick={reloadConfig} title="刷新配置">
-          <RefreshCw className="w-5 h-5" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" className="h-10 px-3 text-sm text-muted-foreground hover:text-foreground"
+            style={{ border: '1px solid rgba(234,215,178,0.10)' }}
+            onClick={handleTestPrint} title="验证浏览器到默认打印机这条通路">
+            <Printer className="w-4 h-4 mr-1.5" />
+            测试打印
+          </Button>
+          <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-foreground"
+            onClick={reloadConfig} title="刷新配置">
+            <RefreshCw className="w-5 h-5" />
+          </Button>
+        </div>
       </div>
 
       {/* 连接状态卡 */}

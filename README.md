@@ -77,22 +77,33 @@ npm run check:pwa      # 起本地静态服务 + 无头 Edge，逐项验清单�
 
 ## 打印站配置 🖨️
 
-在收款台电脑上部署全屏 Kiosk 打印站：
+在收款台电脑上部署全屏 Kiosk 打印站（推荐走 `print-station/` 里的启动器，它会在开浏览器前先自检打印机）：
 
-### 方式一：快捷方式
+```powershell
+powershell -ExecutionPolicy Bypass -File print-station\install-shortcut.ps1   # 重建桌面/启动项快捷方式
+```
+
+### 不出纸时（打印机识别通路）
+
+打印站的静默打印依赖「浏览器默认打印机 → 队列 → 真实 USB 端口」这条链路。标签机换过 USB 口后，
+Windows 会新建 `HPRT HM-T260LR (副本 N)` 队列，主队列却还绑在已消失的 USB 口上，默认打印机和 Chrome
+记住的打印目标都指向它 —— 表现就是**作业进队列、纸不出来**（端口错位还会让队列被标成「脱机」）。
+
+```powershell
+powershell -ExecutionPolicy Bypass -File print-station\fix-printer.ps1 -WhatIfOnly   # 先看诊断
+powershell -ExecutionPolicy Bypass -File print-station\fix-printer.ps1              # 清卡单 + 改绑端口 + 设默认 + 解脱机
+```
+
+打印站页面右上角的**「测试打印」**可以直接验证这条通路（不用等订单）。细节见 [print-station/README.md](print-station/README.md)。
+
+### 手动部署（老办法）
 
 创建 Chrome 快捷方式，目标：
 ```
 "C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk --kiosk-printing --user-data-dir="%TEMP%\chrome-kiosk-print" "https://app-cor1b70nj9xd.vercel.app/"
 ```
 
-### 方式二：一键安装
-
-以管理员身份运行：
-```
-docs\install-print-station.bat
-```
-自动生成桌面快捷方式 + 开机自启。
+或运行 `docs\install-print-station.bat`（生成桌面快捷方式 + 开机自启）。
 
 退出 Kiosk：`Alt+F4`
 
