@@ -15,22 +15,54 @@ desktop/
 
 双击 `install-desktop.cmd`，桌面上会出现「出餐展示屏」图标。之后双击它即可。
 
-想把出餐屏钉在第二块屏：
+开机自动打开：再加 `-Startup`（会往「启动」文件夹也放一个快捷方式）。
+
+卸载：`install-desktop.cmd -Uninstall`。
+
+## 放到外接显示屏上
+
+出餐屏开在哪块屏，由 `-Monitor` 的序号决定（1＝主屏，2＝第二块屏……）。
+
+**第 1 步：确认哪块是外接屏。** 在项目目录跑：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File desktop\order-screen.ps1 -List
+```
+
+输出类似（本机实测）：
+
+```
+可用显示器（-Monitor 的序号就是这里的编号）:
+  1. \\.\DISPLAY1  2560x1600 @ (0,0)  [主屏]
+     显示器：NE160QDM-NYJ   适配器：AMD Radeon(TM) 610M
+  2. \\.\DISPLAY6  3840x2160 @ (-3840,0)
+     显示器：LG HDR 4K   适配器：NVIDIA GeForce RTX 4060 Laptop GPU
+```
+
+「显示器」那行是 EDID 型号（来自 WMI），虚拟显示器（GameViewer / ToDesk / Parsec 等）会被标出来，别选。
+
+**第 2 步：让快捷方式记住这块屏。**
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File desktop\install-desktop.ps1 -ExtraArgs "-Monitor 2"
 ```
 
-开机自动打开：再加 `-Startup`（会往「启动」文件夹也放一个快捷方式）。
+本机已经按 `-Monitor 2`（LG HDR 4K，3840×2160）装好了，双击图标即落在外接屏。
 
-卸载：`install-desktop.cmd -Uninstall`。
+**注意几点**
+
+- Windows 显示设置里必须是「**扩展**这些显示器」；「复制」模式下两块屏是一个桌面，铺不满也不独立。
+- 外接屏拔掉时 `-Monitor 2` 会自动回落到主屏（不会报错、也不会开不出来）。
+- 多屏缩放不同（如 4K@150% + 内屏@100%）已处理：启动器声明了 per-monitor DPI 感知，
+  读到的坐标与真实像素一致，窗口正好铺满该屏、不会偏。
 
 ## 启动器参数
 
 | 参数 | 说明 |
 | --- | --- |
 | `-Page display\|orders` | `display`＝出餐展示（默认，带 `?kiosk=1` 直接全屏展示）；`orders`＝订单管理 / 出餐台 |
-| `-Monitor N` | 显示器序号，1＝主屏，2＝第二块屏…… |
+| `-Monitor N` | 显示器序号，1＝主屏，2＝第二块屏……（跑 `-List` 看对照表） |
+| `-List` | 只列出显示器的序号 / 分辨率 / 位置 / 型号 / 适配器，不启动窗口 |
 | `-Windowed` | 不开全屏，改开普通应用窗口（有标题栏、可拖动） |
 | `-Width/-Height/-X/-Y` | 只配 `-Windowed`：窗口尺寸与位置 |
 | `-Wait` | 等窗口关掉才返回（默认塞完参数就退出，Edge 自己活着） |

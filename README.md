@@ -71,6 +71,7 @@ npm run check:pwa      # 起本地静态服务 + 无头 Edge，逐项验清单�
 双击 `desktop\install-desktop.cmd` → 桌面出现「出餐展示屏」图标。细节（换显示器、开机自启、参数、卸载）见 [desktop/README.md](desktop/README.md)。
 
 - 启动器 `desktop\order-screen.ps1` 用 Edge kiosk 模式打开 `/admin/display?kiosk=1`，`-Monitor N` 指定落在哪块屏。
+- 放到外接显示屏：先跑 `order-screen.ps1 -List` 看序号（会显示 EDID 型号，虚拟显示器会被标出），再用 `install-desktop.ps1 -ExtraArgs "-Monitor 2"` 重装图标。Windows 侧需是「扩展」显示模式；多屏缩放不同已按 per-monitor DPI 处理。
 - 页面侧配套改动：未登录访问后台深链会带上 `?next=`，登录后跳回原目标；出餐展示带 `?kiosk=1` 时直接进全屏展示态（不显示后台侧栏）。
 - 关闭用 `Alt+F4`；日志在 `%LOCALAPPDATA%\zct-order-screen\launcher.log`。
 
