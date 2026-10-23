@@ -6,6 +6,7 @@ import { ArrowLeft, CheckCircle, CheckCircle2, Banknote, Sparkles, BookmarkCheck
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useCart } from '@/contexts/CartContext';
+import { usePendingPaymentBroadcast } from '@/hooks/use-pending-payment';
 import { usePaymentConfig } from '@/hooks/useData';
 import { BUNDLED_PAYMENT_QR, loadRemotePaymentQr } from '@/lib/paymentQr';
 import { createOrder, fetchJpyToCnyRate } from '@/services/api';
@@ -123,8 +124,11 @@ export default function PaymentPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, lang } = useLanguage();
-  const { items, totalAmount, clearCart } = useCart();
+  const { items, totalAmount, totalCount, clearCart } = useCart();
   const { config, loading: configLoading } = usePaymentConfig();
+
+  // 停在付款页期间向打印站广播「待支付金额」，离开 10 秒后打印站那边自动收起
+  usePendingPaymentBroadcast(totalAmount, totalCount);
 
   const paymentMethod = (location.state as { paymentMethod?: PaymentMethod })?.paymentMethod;
   const [submitting, setSubmitting] = useState(false);

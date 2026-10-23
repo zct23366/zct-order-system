@@ -1189,3 +1189,17 @@ html.is-standalone body {
   white-space: nowrap;
 }
 
+/* ═══════════════════════════════════════
+   ⏳ 打印站「待支付」倒计时条
+   时长与 use-pending-payment.ts 里的 STALE_MS（10 秒）保持一致
+   ═══════════════════════════════════════ */
+.pending-countdown {
+  transform-origin: left center;
+  animation: pendingCountdown 10s linear forwards;
+}
+
+@keyframes pendingCountdown {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+

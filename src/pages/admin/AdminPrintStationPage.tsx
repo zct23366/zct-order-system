@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Printer, Wifi, WifiOff, RefreshCw, CheckCircle2, Clock } from 'lucide-react';
+import { Printer, Wifi, WifiOff, RefreshCw, CheckCircle2, Clock, Banknote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
@@ -7,6 +7,7 @@ import { supabase } from '@/db/supabase';
 import { fetchOrderWithItems } from '@/services/api';
 import { usePrintConfig } from '@/hooks/useData';
 import { usePrint } from '@/hooks/usePrint';
+import { usePendingPayment } from '@/hooks/use-pending-payment';
 import { PAYMENT_METHOD_LABELS } from '@/types/types';
 import type { OrderWithItems } from '@/types/types';
 
@@ -23,6 +24,8 @@ type ConnState = 'connecting' | 'connected' | 'disconnected';
 export default function AdminPrintStationPage() {
   const { config: printConfig, reload: reloadConfig } = usePrintConfig();
   const { printOrder } = usePrint(printConfig);
+  // 顾客停在付款页时的待支付金额：10 秒收不到心跳就自动消失
+  const pendingPayment = usePendingPayment();
 
   const [connState, setConnState] = useState<ConnState>('connecting');
   const [printRecords, setPrintRecords] = useState<PrintRecord[]>([]);
@@ -235,6 +238,39 @@ export default function AdminPrintStationPage() {
           <li>如连接断开请刷新页面重新连接</li>
         </ol>
       </div>
+
+      {/* 待支付金额：顾客停在付款页时出现，10 秒收不到心跳自动收起 */}
+      {pendingPayment && (
+        <div className="glass-card rounded-2xl px-5 py-4 flex items-center gap-4 relative overflow-hidden"
+          data-testid="pending-payment">
+          <div className="shrink-0 w-12 h-12 rounded-full flex items-center justify-center"
+            style={{ background: 'rgba(217,152,59,0.12)', border: '1px solid rgba(217,152,59,0.35)' }}>
+            <Banknote className="w-6 h-6 text-primary" style={{ filter: 'drop-shadow(0 0 8px rgba(217,152,59,0.45))' }} />
+          </div>
+          <div className="flex flex-col gap-1 flex-1 min-w-0">
+            <span className="text-xs tracking-[0.22em] text-muted-foreground">待支付 · 顾客正在付款页</span>
+            <span className="font-mono font-bold text-primary leading-none glow-number"
+              style={{ fontSize: '1.9rem' }}>
+              ¥{pendingPayment.amount.toFixed(2)}
+            </span>
+          </div>
+          <div className="shrink-0 text-right text-xs text-muted-foreground flex items-center gap-2">
+            {pendingPayment.itemCount > 0 && <span>{pendingPayment.itemCount} 件</span>}
+            <span className="relative flex w-2.5 h-2.5">
+              <span className="absolute inline-flex h-full w-full rounded-full opacity-60 animate-ping"
+                style={{ background: 'hsl(var(--primary))' }} />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5"
+                style={{ background: 'hsl(var(--primary))' }} />
+            </span>
+          </div>
+          {/* 10 秒倒计时条：key 变化即重新计时 */}
+          <div className="absolute left-0 right-0 bottom-0 h-0.5"
+            style={{ background: 'rgba(234,215,178,0.06)' }}>
+            <div key={pendingPayment.receivedAt} className="pending-countdown h-full"
+              style={{ background: 'rgba(217,152,59,0.55)' }} />
+          </div>
+        </div>
+      )}
 
       {/* 打印记录 */}
       <div className="flex flex-col gap-3">
